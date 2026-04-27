@@ -4,10 +4,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export const pool = new Pool({
-  user: process.env.DB_USER,
-  host: "localhost",
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: 5432,
-});
+export const pool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : new Pool({
+      user: process.env.DB_USER,
+      host: "localhost",
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD,
+      port: 5432,
+    });
