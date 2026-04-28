@@ -115,7 +115,7 @@ export default function Usuarios() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Usuarios</h1>
         <button
-          className="btn btn-primary"
+          className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded shadow transition-colors"
           onClick={() => setShowModal(true)}
         >
           Crear Usuario
