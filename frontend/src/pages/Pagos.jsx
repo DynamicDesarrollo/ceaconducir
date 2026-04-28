@@ -281,10 +281,10 @@ export default function Pagos() {
 
                                                 {/* VER */}
                                                 <button
-                                                    onClick={() => handleVer(row)}
+                                                    onClick={() => verDetalle(row)}
                                                     className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs hover:bg-blue-200"
                                                 >
-                                                    👁 Ver
+                                                    👁 Ver Pagos
                                                 </button>
 
                                                 {/* EDITAR */}
