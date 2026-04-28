@@ -1,13 +1,21 @@
 import { Router } from "express";
+
 import {
   crearEgreso,
   getEgresos,
   getCategoriasEgreso,
   crearCategoriaEgreso,
+  eliminarEgreso,
+  actualizarEgreso,
 } from "../controllers/egresos.controller.js";
 import { verificarToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
+// Eliminar egreso
+router.delete('/:id', verificarToken, eliminarEgreso);
+
+// Actualizar egreso
+router.put('/:id', verificarToken, actualizarEgreso);
 
 // ✔ EGRESOS
 router.get("/", verificarToken, getEgresos);

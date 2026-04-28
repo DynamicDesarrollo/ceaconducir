@@ -1,4 +1,67 @@
 // =============================
+// 🔹 ACTUALIZAR EGRESO
+// =============================
+export const actualizarEgreso = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { categoria_id, valor, vehiculo_id, descripcion, tercero_id } = req.body;
+
+    // Validaciones básicas
+    if (!categoria_id || !valor) {
+      return res.status(400).json({ msg: 'Categoría y valor son obligatorios' });
+    }
+
+    // Validar categoría
+    const categoria = await pool.query(
+      `SELECT requiere_vehiculo FROM categorias_egreso WHERE id = $1`,
+      [categoria_id]
+    );
+    if (categoria.rowCount === 0) {
+      return res.status(404).json({ msg: 'Categoría no encontrada' });
+    }
+
+    // Validar vehículo si aplica
+    if (categoria.rows[0].requiere_vehiculo && !vehiculo_id) {
+      return res.status(400).json({ msg: 'Debe seleccionar vehículo' });
+    }
+
+    // Validar tercero (si viene)
+    if (tercero_id) {
+      const tercero = await pool.query(
+        `SELECT id FROM terceros WHERE id = $1`,
+        [tercero_id]
+      );
+      if (tercero.rowCount === 0) {
+        return res.status(404).json({ msg: 'Tercero no encontrado' });
+      }
+    }
+
+    // Actualizar egreso
+    await pool.query(
+      `UPDATE egresos SET categoria_id = $1, valor = $2, vehiculo_id = $3, descripcion = $4, tercero_id = $5 WHERE id = $6`,
+      [categoria_id, valor, vehiculo_id || null, descripcion || null, tercero_id || null, id]
+    );
+
+    res.json({ msg: 'Egreso actualizado correctamente' });
+  } catch (error) {
+    console.error('ERROR ACTUALIZAR EGRESO:', error);
+    res.status(500).json({ msg: 'Error al actualizar egreso', error: error.message });
+  }
+};
+// =============================
+// 🔴 ELIMINAR EGRESO
+// =============================
+export const eliminarEgreso = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM egresos WHERE id = $1', [id]);
+    res.json({ msg: 'Egreso eliminado' });
+  } catch (error) {
+    console.error('ERROR ELIMINAR EGRESO:', error);
+    res.status(500).json({ msg: 'Error al eliminar egreso', error: error.message });
+  }
+};
+// =============================
 // 🔹 CREAR CATEGORÍA DE EGRESO
 // =============================
 export const crearCategoriaEgreso = async (req, res) => {
@@ -120,16 +183,16 @@ export const getEgresos = async (req, res) => {
         e.fecha,
         e.descripcion,
         e.valor AS monto,
-
+        e.categoria_id,
+        e.tercero_id,
+        e.vehiculo_id,
         c.nombre AS categoria,
         v.placa AS vehiculo,
         t.nombre AS tercero
-
       FROM egresos e
       LEFT JOIN categorias_egreso c ON c.id = e.categoria_id
       LEFT JOIN vehiculos v ON v.id = e.vehiculo_id
       LEFT JOIN terceros t ON t.id = e.tercero_id
-
       ORDER BY e.fecha DESC
     `);
 

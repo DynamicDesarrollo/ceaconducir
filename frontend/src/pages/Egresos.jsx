@@ -118,10 +118,14 @@ export default function Egresos() {
     }
 
     try {
-      await api.post("/egresos", form);
+      if (editEgreso) {
+        await api.put(`/egresos/${editEgreso.id}`, form);
+      } else {
+        await api.post("/egresos", form);
+      }
 
       setShowModal(false);
-
+      setEditEgreso(null);
       setForm({
         categoria_id: "",
         tercero_id: "",
@@ -129,7 +133,6 @@ export default function Egresos() {
         valor: "",
         descripcion: "",
       });
-
       loadData();
     } catch (error) {
       alert(error.response?.data?.msg || "Error al guardar egreso");
@@ -196,6 +199,35 @@ export default function Egresos() {
   };
 
   // =========================
+  // ELIMINAR EGRESO
+  // =========================
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Eliminar este egreso?")) return;
+    try {
+      await api.delete(`/egresos/${id}`);
+      loadData();
+    } catch (error) {
+      alert(error.response?.data?.msg || "Error al eliminar egreso");
+    }
+  };
+
+  // =========================
+  // EDITAR EGRESO
+  // =========================
+  const [editEgreso, setEditEgreso] = useState(null);
+  const handleEditar = (row) => {
+    setEditEgreso(row);
+    setForm({
+      categoria_id: row.categoria_id ? String(row.categoria_id) : "",
+      tercero_id: row.tercero_id ? String(row.tercero_id) : "",
+      vehiculo_id: row.vehiculo_id ? String(row.vehiculo_id) : "",
+      valor: row.monto || "",
+      descripcion: row.descripcion || "",
+    });
+    setShowModal(true);
+  };
+
+  // =========================
   // COLUMNAS
   // =========================
   const columns = [
@@ -222,6 +254,25 @@ export default function Egresos() {
     {
       title: "Fecha",
       render: (row) => formatDate(row.fecha),
+    },
+    {
+      title: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          <button
+            className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs hover:bg-yellow-200"
+            onClick={() => handleEditar(row)}
+          >
+            ✏️ Editar
+          </button>
+          <button
+            className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs hover:bg-red-200"
+            onClick={() => handleEliminar(row.id)}
+          >
+            🗑 Eliminar
+          </button>
+        </div>
+      ),
     },
   ];
 
@@ -380,7 +431,7 @@ export default function Egresos() {
             />
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowModal(false)}>
+              <button onClick={() => { setShowModal(false); setEditEgreso(null); }}>
                 Cancelar
               </button>
 
@@ -388,7 +439,7 @@ export default function Egresos() {
                 onClick={handleSubmit}
                 className="bg-red-500 text-white px-4 py-2 rounded"
               >
-                Guardar
+                {editEgreso ? "Actualizar" : "Guardar"}
               </button>
             </div>
           </div>
