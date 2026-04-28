@@ -39,10 +39,19 @@ export default function Dashboard() {
   // KPIs
   const totalEstudiantes = data.estudiantes.length;
 
-  const hoy = new Date().toISOString().slice(0, 10);
 
+  // Mejor comparación de fechas: zona horaria local
+  const hoy = new Date();
   const pagosHoy = data.pagos
-    .filter((p) => p.fecha?.slice(0, 10) === hoy)
+    .filter((p) => {
+      if (!p.fecha) return false;
+      const fechaPago = new Date(p.fecha);
+      return (
+        fechaPago.getFullYear() === hoy.getFullYear() &&
+        fechaPago.getMonth() === hoy.getMonth() &&
+        fechaPago.getDate() === hoy.getDate()
+      );
+    })
     .reduce((acc, p) => acc + Number(p.monto || 0), 0);
 
   const totalEgresos = data.egresos.reduce(
