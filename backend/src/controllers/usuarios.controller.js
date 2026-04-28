@@ -60,7 +60,11 @@ export const actualizarUsuario = async (req, res) => {
     if (!req.user.isAdmin) {
       return res.status(403).json({ msg: 'No autorizado' });
     }
+
     const { id } = req.params;
+
+    // Eliminar egresos relacionados a este usuario
+    await pool.query('DELETE FROM egresos WHERE usuario_id = $1', [id]);
     const { nombre, email, password, rol_id, empresa_id } = req.body;
     if (!nombre || !email || !rol_id) {
       return res.status(400).json({ msg: 'Faltan campos obligatorios' });
@@ -94,6 +98,9 @@ export const eliminarUsuario = async (req, res) => {
       return res.status(403).json({ msg: 'No autorizado' });
     }
     const { id } = req.params;
+
+
+    // Eliminar usuario
     await pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
     res.json({ msg: 'Usuario eliminado' });
   } catch (error) {

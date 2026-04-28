@@ -187,6 +187,10 @@ export const deleteEstudiante = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Eliminar cuenta financiera si existe
+        await pool.query(`DELETE FROM cuentas_estudiante WHERE estudiante_id = $1`, [id]);
+
+        // Eliminar estudiante
         const result = await pool.query(
             `DELETE FROM estudiantes WHERE id = $1 RETURNING *`,
             [id]

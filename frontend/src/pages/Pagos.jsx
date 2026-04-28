@@ -132,22 +132,17 @@ export default function Pagos() {
     const getEstadoCurso = (row) => {
         const total = Number(row.total_curso || 0);
         const pagado = Number(row.total_pagado || 0);
-
         if (!total) {
-            return { label: "Sin curso", color: "gray" };
+            return { label: "Sin curso", color: "gray", porcentaje: 0 };
         }
-
-        const porcentaje = (pagado / total) * 100;
-
+        const porcentaje = Math.round((pagado / total) * 100);
         if (porcentaje >= 100) {
-            return { label: "Pagado", color: "green" };
+            return { label: "Pagado", color: "green", porcentaje };
         }
-
         if (porcentaje > 0) {
-            return { label: `En proceso (${Math.round(porcentaje)}%)`, color: "yellow" };
+            return { label: `En proceso (${porcentaje}%)`, color: "yellow", porcentaje };
         }
-
-        return { label: "Pendiente", color: "red" };
+        return { label: "Pendiente", color: "red", porcentaje };
     };
 
     const formatDate = (date) => {
