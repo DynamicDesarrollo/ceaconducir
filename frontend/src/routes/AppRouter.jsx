@@ -4,9 +4,11 @@ import Dashboard from "../pages/Dashboard";
 import Estudiantes from "../pages/Estudiantes";
 import Pagos from "../pages/Pagos";
 import Egresos from "../pages/Egresos";
+
 import MainLayout from "../layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import { Navigate } from "react-router-dom";
+import Usuarios from "../pages/Usuarios";
 
 export default function AppRouter() {
     return (
@@ -56,6 +58,18 @@ export default function AppRouter() {
                         <ProtectedRoute>
                             <MainLayout>
                                 <Egresos />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Usuarios solo para admin */}
+                <Route
+                    path="/usuarios"
+                    element={
+                        <ProtectedRoute adminOnly={true}>
+                            <MainLayout>
+                                <Usuarios />
                             </MainLayout>
                         </ProtectedRoute>
                     }

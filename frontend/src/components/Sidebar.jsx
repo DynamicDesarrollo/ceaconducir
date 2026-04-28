@@ -48,12 +48,24 @@ export default function Sidebar() {
     ? isMobileOpen
     : !collapsed || hovering;
 
+  // Obtener rol del usuario autenticado
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch {}
+
+  const isAdmin = user?.rol === "ADMIN" || user?.rol_id === 1 || user?.rol === 1;
+
   const menuSections = [
     {
       title: "General",
       items: [
         { name: "Dashboard", icon: Home, path: "/" },
         { name: "Estudiantes", icon: Users, path: "/estudiantes" },
+        // Solo admin ve Usuarios
+        ...(isAdmin
+          ? [{ name: "Usuarios", icon: Users, path: "/usuarios" }]
+          : []),
       ],
     },
     {

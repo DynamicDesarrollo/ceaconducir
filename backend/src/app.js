@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 
+
 import authRoutes from './routes/auth.routes.js';
 import estudiantesRoutes from './routes/estudiantes.routes.js';
 import pagosRoutes from './routes/pagos.routes.js';
@@ -10,6 +11,7 @@ import vehiculosRoutes from './routes/vehiculos.routes.js';
 import categoriasRoutes from "./routes/categorias.routes.js";
 import combosRoutes from "./routes/combos.routes.js";
 import tercerosRoutes from "./routes/terceros.routes.js";
+import usuariosRoutes from './routes/usuarios.routes.js';
 
 
 
@@ -26,6 +28,8 @@ app.use('/api/vehiculos', vehiculosRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/combos', combosRoutes);
 app.use("/api/terceros", tercerosRoutes);
+
+app.use('/api/usuarios', usuariosRoutes);
 
 
 

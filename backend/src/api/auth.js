@@ -47,6 +47,9 @@ export const login = async (req, res) => {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
+        rol: usuario.rol_id, // <-- Esto es clave para el Sidebar
+        rol_id: usuario.rol_id,
+        empresa_id: usuario.empresa_id,
       },
     });
 

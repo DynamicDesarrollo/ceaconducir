@@ -19,7 +19,9 @@ export const verificarToken = (req, res, next) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
 
+
     req.user = decoded;
+    req.user.isAdmin = decoded.rol === 'ADMIN' || decoded.rol === 1 || decoded.rol_id === 1;
 
     next();
 
