@@ -13,6 +13,28 @@ export default function Egresos() {
   const [showModal, setShowModal] = useState(false);
   const [openModalTercero, setOpenModalTercero] = useState(false);
   const [openModalVehiculo, setOpenModalVehiculo] = useState(false);
+  const [openModalCategoria, setOpenModalCategoria] = useState(false);
+  const [formCategoria, setFormCategoria] = useState({
+    nombre: ""
+  });
+  // =========================
+  // CREAR CATEGORIA EGRESO
+  // =========================
+  const crearCategoria = async () => {
+    try {
+      if (!formCategoria.nombre) {
+        return alert("Nombre obligatorio");
+      }
+      const res = await api.post("/egresos/categorias", formCategoria);
+      const nuevos = await api.get("/egresos/categorias");
+      setCategorias(nuevos.data);
+      setForm({ ...form, categoria_id: res.data.id });
+      setOpenModalCategoria(false);
+      setFormCategoria({ nombre: "" });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const [form, setForm] = useState({
     categoria_id: "",
@@ -240,20 +262,53 @@ export default function Egresos() {
             <h2 className="font-bold">Nuevo Egreso</h2>
 
             {/* CATEGORIA */}
-            <select
-              className="w-full border p-2 rounded"
-              value={form.categoria_id}
-              onChange={(e) =>
-                setForm({ ...form, categoria_id: e.target.value })
-              }
-            >
-              <option value="">Seleccione categoría</option>
-              {categorias.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                className="w-full border p-2 rounded"
+                value={form.categoria_id}
+                onChange={(e) =>
+                  setForm({ ...form, categoria_id: e.target.value })
+                }
+              >
+                <option value="">Seleccione categoría</option>
+                {categorias.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setOpenModalCategoria(true)}
+                className="bg-blue-500 text-white px-3 rounded"
+              >
+                +
+              </button>
+            </div>
+            {/* ================= MODAL CATEGORIA ================= */}
+            {openModalCategoria && (
+              <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+                <div className="bg-white p-6 rounded-xl w-96 space-y-3">
+                  <h2 className="font-bold">Nueva Categoría de Egreso</h2>
+                  <input
+                    placeholder="Nombre"
+                    value={formCategoria.nombre}
+                    onChange={e => setFormCategoria({ nombre: e.target.value })}
+                    className="w-full border p-2 rounded"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setOpenModalCategoria(false)}>
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={crearCategoria}
+                      className="bg-blue-600 text-white px-4 py-2 rounded"
+                    >
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* TERCERO */}
             <div className="flex gap-2">
@@ -390,6 +445,65 @@ export default function Egresos() {
 
               <button
                 onClick={crearVehiculo}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL TERCERO ================= */}
+      {openModalTercero && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-96 space-y-3">
+
+            <h2 className="font-bold">Nuevo Tercero</h2>
+
+            <input
+              placeholder="Nombre"
+              value={formTercero.nombre}
+              onChange={(e) =>
+                setFormTercero({
+                  ...formTercero,
+                  nombre: e.target.value,
+                })
+              }
+              className="w-full border p-2 rounded"
+            />
+
+            <input
+              placeholder="Teléfono"
+              value={formTercero.telefono}
+              onChange={(e) =>
+                setFormTercero({
+                  ...formTercero,
+                  telefono: e.target.value,
+                })
+              }
+              className="w-full border p-2 rounded"
+            />
+
+            <input
+              placeholder="Email"
+              value={formTercero.email}
+              onChange={(e) =>
+                setFormTercero({
+                  ...formTercero,
+                  email: e.target.value,
+                })
+              }
+              className="w-full border p-2 rounded"
+            />
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setOpenModalTercero(false)}>
+                Cancelar
+              </button>
+
+              <button
+                onClick={crearTercero}
                 className="bg-blue-600 text-white px-4 py-2 rounded"
               >
                 Guardar

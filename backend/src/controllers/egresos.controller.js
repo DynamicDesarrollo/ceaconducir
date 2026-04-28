@@ -1,3 +1,27 @@
+// =============================
+// 🔹 CREAR CATEGORÍA DE EGRESO
+// =============================
+export const crearCategoriaEgreso = async (req, res) => {
+  try {
+    const { nombre, requiere_vehiculo } = req.body;
+    if (!nombre) {
+      return res.status(400).json({ msg: 'El nombre es obligatorio' });
+    }
+    const result = await pool.query(
+      `INSERT INTO categorias_egreso (nombre, requiere_vehiculo)
+       VALUES ($1, $2)
+       RETURNING id, nombre, requiere_vehiculo`,
+      [nombre, requiere_vehiculo || false]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("ERROR CREAR CATEGORIA EGRESO:", error);
+    res.status(500).json({
+      msg: "Error al crear categoría de egreso",
+      error: error.message,
+    });
+  }
+};
 import { pool } from '../config/db.js';
 
 // =============================

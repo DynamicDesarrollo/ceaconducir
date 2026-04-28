@@ -12,6 +12,7 @@ import combosRoutes from "./routes/combos.routes.js";
 import tercerosRoutes from "./routes/terceros.routes.js";
 
 
+
 const app = express();
 
 app.use(cors());
@@ -24,8 +25,8 @@ app.use('/api/egresos', egresosRoutes);
 app.use('/api/vehiculos', vehiculosRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/combos', combosRoutes);
-//app.use("/api/categorias-egreso", categoriasEgresoRoutes);
 app.use("/api/terceros", tercerosRoutes);
+
 
 
 export default app;
