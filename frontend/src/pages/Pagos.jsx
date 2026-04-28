@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import FormPago from "../components/FormPago";
 import { getPagos } from "../api/pagos";
 import api from "../api/axios";
+import { toast } from "react-toastify";
 
 
 export default function Pagos() {
@@ -33,15 +34,12 @@ export default function Pagos() {
             const confirmar = window.confirm("¿Eliminar este pago?");
             if (!confirmar) return;
 
-            await axios.delete(`http://localhost:4000/api/pagos/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            });
+
+            await api.delete(`/pagos/${id}`);
 
             toast.success("Pago eliminado 🗑️");
 
-            obtenerPagos(); // 🔥 refresca tabla
+            loadData(); // 🔥 refresca tabla
 
         } catch (error) {
             console.error(error);

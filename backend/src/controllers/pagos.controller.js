@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import { recalcularCuenta } from '../services/cartera.service.js';
 
 // =============================
 // 🟢 REGISTRAR PAGO
