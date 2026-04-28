@@ -316,7 +316,7 @@ export default function Pagos() {
                                 <td colSpan="4" className="p-3 text-right font-semibold">
                                     TOTAL
                                 </td>
-                                <td className="font-bold text-green-600">
+                                <td className="font-bold text-green-600" text-right>
                                     {formatMoney(total)}
                                 </td>
                                 <td></td>
