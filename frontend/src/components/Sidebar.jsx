@@ -109,7 +109,7 @@ export default function Sidebar() {
                 className="w-10 h-10 rounded-full border border-yellow-400"
               />
               <span className="text-yellow-400 font-bold text-sm">
-                CEA Conducir Sede Sincelejo
+                CEA Conducir Sincelejo
               </span>
             </div>
           )}
