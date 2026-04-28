@@ -1,9 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import FacturaPago from "./FacturaPago";
+import { useReactToPrint } from "react-to-print";
 import api from "../api/axios";
 import { getCuentaEstudiante } from "../api/estudiantes";
 import { toast } from "react-toastify";
 
 export default function FormPago({ onClose, onSaved }) {
+    // Estado para mostrar la factura
+    const [showFactura, setShowFactura] = useState(false);
+    const [facturaData, setFacturaData] = useState(null);
+    const facturaRef = useRef();
+    const handlePrint = useReactToPrint({
+        content: () => facturaRef.current,
+    });
 
     const [estudiantes, setEstudiantes] = useState([]);
     const [categorias, setCategorias] = useState([]);
@@ -88,28 +97,49 @@ export default function FormPago({ onClose, onSaved }) {
     // 💾 guardar pago
     const handleSubmit = async () => {
         if (totalFinal <= 0) return toast.error("Monto inválido");
-
         if (!tieneCurso && !form.categoria_id && !form.combo_id) {
             return toast.error("Selecciona categoría o combo");
         }
-
         let montoEnviar = totalFinal;
-
         if (cuenta?.saldo > 0 && totalFinal > cuenta.saldo) {
             montoEnviar = cuenta.saldo;
         }
-
-        await api.post("/pagos", {
+        // Guardar pago y obtener datos para factura
+        const res = await api.post("/pagos", {
             estudiante_id: form.estudiante_id,
             categoria_id: form.categoria_id,
-            combo_id: form.combo_id, // 🔥 ESTA ES LA CLAVE
+            combo_id: form.combo_id,
             monto: montoEnviar
         });
-
+        // Mostrar factura
+        // Obtener el nombre del curso o combo seleccionado
+        let cursoNombre = "-";
+        if (form.es_combo && form.combo_id) {
+            const comboSel = combos.find(c => c.id == form.combo_id);
+            cursoNombre = comboSel ? `Combo: ${comboSel.nombre}` : "-";
+        } else if (!form.es_combo && form.categoria_id) {
+            const catSel = categorias.find(c => c.id == form.categoria_id);
+            cursoNombre = catSel ? `Categoría: ${catSel.nombre}` : "-";
+        }
+        setFacturaData({
+            pago: {
+                ...res.data.pago,
+                monto: montoEnviar,
+                fecha: new Date().toISOString(),
+                categoria: cuenta?.categoria,
+                combo: cuenta?.combo
+            },
+            estudiante: selectedEstudiante,
+            cuenta: {
+                ...cuenta,
+                total_pagado: (cuenta?.total_pagado || 0) + montoEnviar,
+                saldo: (cuenta?.saldo || 0) - montoEnviar
+            },
+            cursoNombre
+        });
+        setShowFactura(true);
         toast.success("Pago registrado");
         onSaved();
-        onClose();
-       
     };
 
     // 👤 seleccionar estudiante
@@ -192,8 +222,21 @@ export default function FormPago({ onClose, onSaved }) {
         }).format(value || 0);
 
     return (
+        <>
+        {/* MODAL FACTURA (fuera del flujo principal para evitar problemas de ciclo de vida) */}
+        {showFactura && facturaData && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" style={{ pointerEvents: 'auto' }}>
+                <div className="bg-white p-6 rounded-xl w-full max-w-2xl flex flex-col items-center" style={{ zIndex: 1001, pointerEvents: 'auto' }}>
+                    <FacturaPago ref={facturaRef} {...facturaData} />
+                    <div className="flex gap-4 mt-4">
+                        <button onClick={handlePrint} className="bg-blue-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Imprimir</button>
+                        <button onClick={() => { setShowFactura(false); onClose(); }} className="border px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        )}
+        {!showFactura && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
             <div className="bg-white p-6 rounded-xl w-full max-w-lg space-y-4">
 
                 <h2 className="text-lg font-bold">Registrar Pago</h2>
@@ -385,7 +428,8 @@ export default function FormPago({ onClose, onSaved }) {
                     </div>
                 </div>
             )}
-
         </div>
+        )}
+        </>
     );
 }
