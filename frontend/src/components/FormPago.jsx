@@ -230,6 +230,7 @@ export default function FormPago({ onClose, onSaved }) {
                     <FacturaPago ref={facturaRef} {...facturaData} />
                     <div className="flex gap-4 mt-4">
                         <button onClick={handlePrint} className="bg-blue-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Imprimir</button>
+                        <button onClick={handlePrint} className="bg-gray-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Expedir copia</button>
                         <button onClick={() => { setShowFactura(false); onClose(); }} className="border px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Cerrar</button>
                     </div>
                 </div>

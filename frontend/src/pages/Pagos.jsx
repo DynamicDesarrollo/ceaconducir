@@ -4,7 +4,9 @@ import FormPago from "../components/FormPago";
 import { getPagos } from "../api/pagos";
 import api from "../api/axios";
 import { toast } from "react-toastify";
-
+import FacturaPago from "../components/FacturaPago";
+import { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 
 export default function Pagos() {
 
@@ -23,6 +25,13 @@ export default function Pagos() {
 
     const [historial, setHistorial] = useState([]);
 
+    // Estado para modal de factura (debe ir junto a otros useState)
+    const [showFacturaModal, setShowFacturaModal] = useState(false);
+    const [facturaModalData, setFacturaModalData] = useState(null);
+    const facturaRef = useRef();
+    const handlePrintFactura = useReactToPrint({
+        content: () => facturaRef.current
+    });
 
     const handleEditar = (pago) => {
         setPagoSeleccionado(pago);
@@ -271,6 +280,28 @@ export default function Pagos() {
 
                                         <td className="text-left">
                                             <div className="flex gap-2">
+                                                {/* FACTURA */}
+                                                <button
+                                                    onClick={async () => {
+                                                        // Obtener solo la cuenta, usar datos del row para estudiante
+                                                        const cuentaRes = await api.get(`/estudiantes/cuenta/${row.estudiante_id}`);
+                                                        setFacturaModalData({
+                                                            pago: row,
+                                                            estudiante: {
+                                                                nombre: row.estudiante,
+                                                                documento: row.documento,
+                                                                telefono: row.telefono,
+                                                                direccion: row.direccion
+                                                            },
+                                                            cuenta: cuentaRes.data,
+                                                            cursoNombre: row.categoria ? `Categoría: ${row.categoria}` : (row.combo ? `Combo: ${row.combo}` : '-')
+                                                        });
+                                                        setShowFacturaModal(true);
+                                                    }}
+                                                    className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs hover:bg-green-200"
+                                                >
+                                                    🧾 Factura
+                                                </button>
 
                                                 {/* VER */}
                                                 <button
@@ -295,10 +326,8 @@ export default function Pagos() {
                                                 >
                                                     🗑 Eliminar
                                                 </button>
-
                                             </div>
                                         </td>
-
                                     </tr>
                                 );
                             })}
@@ -429,6 +458,19 @@ export default function Pagos() {
                             </button>
                         </div>
 
+                    </div>
+                </div>
+            )}
+            {/* MODAL DE FACTURA */}
+            {showFacturaModal && facturaModalData && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl w-full max-w-2xl flex flex-col items-center">
+                        <FacturaPago ref={facturaRef} {...facturaModalData} />
+                        <div className="flex gap-4 mt-4">
+                            <button onClick={handlePrintFactura} className="bg-blue-600 text-white px-4 py-2 rounded">Imprimir</button>
+                            <button onClick={handlePrintFactura} className="bg-gray-600 text-white px-4 py-2 rounded">Expedir copia</button>
+                            <button onClick={() => setShowFacturaModal(false)} className="border px-4 py-2 rounded">Cerrar</button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -30,7 +30,7 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
           <div style={{ fontWeight: 700, fontSize: 22 }}>CEA CONDUCIR S.A.S.</div>
           <div style={{ fontSize: 13 }}>NIT: 901443965-1</div>
           <div style={{ fontSize: 13 }}>Calle 22 # 16-09 Calle Santander - Sincelejo</div>
-          <div style={{ fontSize: 13 }}>Tel: 301 479 6424</div>
+          <div style={{ fontSize: 13 }}>Tel: 301 270 4886</div>
         </div>
         {/* Recibo de caja a la derecha */}
         <div style={{ flex: 1, textAlign: 'right', paddingLeft: 16 }}>
@@ -83,12 +83,20 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
         <table style={{ fontSize: 13, minWidth: 220 }}>
           <tbody>
             <tr>
+              <td style={{ padding: 4, border: "1px solid #2196f3" }}>VALOR CURSO</td>
+              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(cuenta?.total_curso)}</td>
+            </tr>
+            <tr>
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>SUBTOTAL</td>
               <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(pago.monto)}</td>
             </tr>
             <tr>
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>TOTAL PAGADO</td>
-              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(cuenta?.total_pagado)}</td>
+              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>
+                {formatMoney(
+                  Math.round((cuenta?.total_pagado || 0) + (pago?.monto || 0))
+                )}
+              </td>
             </tr>
             <tr>
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>SALDO</td>
@@ -104,7 +112,7 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
       </div>
 
       {/* Firmas */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24, marginBottom: 8, padding: '0 16px', alignItems: 'flex-start', height: 40 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, marginBottom: 8, padding: '0 16px', alignItems: 'flex-start', height: 40 }}>
         <div style={{ textAlign: "center", width: '40%' }}>
           <div style={{ borderTop: '1px solid #2196f3', margin: '4px 0 0 0', height: 16 }}>&nbsp;</div>
           <div style={{ fontSize: 12, marginTop: 2 }}>FIRMA Y SELLO</div>
