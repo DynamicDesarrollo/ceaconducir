@@ -17,6 +17,9 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
   };
 
 
+  // Usar el valor histórico si existe
+  const valorCurso = pago?.total_curso_historico ?? cuenta?.total_curso ?? 0;
+
   return (
     <div ref={ref} style={{ width: "19cm", height: "14cm", background: "#fff", fontFamily: 'Arial', border: '2px solid #2196f3', boxSizing: 'border-box', padding: 0, position: 'relative', margin: '24px auto' }}>
       {/* Encabezado con logo a la izquierda y datos a la derecha */}
@@ -35,7 +38,7 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
         {/* Recibo de caja a la derecha */}
         <div style={{ flex: 1, textAlign: 'right', paddingLeft: 16 }}>
           <div style={{ fontWeight: 700, fontSize: 16, color: '#2196f3', marginTop: 4 }}>RECIBO DE CAJA</div>
-          <div style={{ fontSize: 13 }}>No. {pago?.id || "00001"}</div>
+          <div style={{ fontSize: 13 }}>No. {pago?.consecutivo || "00001"}</div>
           <div style={{ fontSize: 13 }}>Fecha: {new Date(pago.fecha || Date.now()).toLocaleDateString()}</div>
         </div>
       </div>
@@ -84,7 +87,7 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
           <tbody>
             <tr>
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>VALOR CURSO</td>
-              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(cuenta?.total_curso)}</td>
+              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(valorCurso)}</td>
             </tr>
             <tr>
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>SUBTOTAL</td>

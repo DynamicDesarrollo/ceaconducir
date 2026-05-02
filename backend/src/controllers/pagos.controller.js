@@ -38,7 +38,7 @@ export const registrarPago = async (req, res) => {
         // 🔥 1. OBTENER ESTUDIANTE (PRIMERO SIEMPRE)
         // =============================
         const estudianteDB = await pool.query(
-            `SELECT total_curso, total_pagado 
+            `SELECT id, nombre, email, total_curso, total_pagado 
              FROM estudiantes 
              WHERE id = $1`,
             [estudiante_id]
@@ -51,6 +51,8 @@ export const registrarPago = async (req, res) => {
         let totalCurso = Number(estudianteDB.rows[0].total_curso || 0);
         let totalPagadoActual = Number(estudianteDB.rows[0].total_pagado || 0);
         const tieneCurso = totalCurso > 0;
+        // const estudianteEmail = estudianteDB.rows[0].email;
+        // const estudianteNombre = estudianteDB.rows[0].nombre;
 
         // =============================
         // 🔒 VALIDACIÓN PRIMER PAGO
@@ -151,23 +153,38 @@ export const registrarPago = async (req, res) => {
         }
 
         // =============================
-        // 💾 7. INSERTAR PAGO
+        // 💾 7. OBTENER CONSECUTIVO Y INSERTAR PAGO (con valores históricos)
         // =============================
+        // Obtener el consecutivo máximo actual
+        const consecutivoRes = await pool.query('SELECT COALESCE(MAX(consecutivo), 0) AS max_consecutivo FROM pagos');
+        const nuevoConsecutivo = Number(consecutivoRes.rows[0].max_consecutivo) + 1;
+
+        // Calcular saldo histórico sin permitir negativos
+        const saldoHistorico = Math.max(totalCurso - (totalPagadoActual + montoFinal), 0);
         const result = await pool.query(
             `INSERT INTO pagos (
-    estudiante_id,
-    categoria_id,
-    combo_id,
-    es_combo,
-    monto
-  )
-  VALUES ($1, $2, $3, $4, $5)`,
+                estudiante_id,
+                categoria_id,
+                combo_id,
+                es_combo,
+                monto,
+                total_pagado_historico,
+                saldo_historico,
+                total_curso_historico,
+                consecutivo
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *`,
             [
                 estudiante_id,
                 categoria_id || null,
                 combo_id || null,
                 es_combo,
-                montoFinal // ✅ FIX REAL
+                montoFinal,
+                totalPagadoActual + montoFinal, // total pagado después de este pago
+                saldoHistorico, // saldo después de este pago, nunca negativo
+                totalCurso,
+                nuevoConsecutivo
             ]
         );
         // =============================
@@ -213,6 +230,9 @@ export const registrarPago = async (req, res) => {
         // =============================
         // 🚀 RESPUESTA
         // =============================
+
+        // Envío de correo deshabilitado temporalmente
+
         res.json({
             pago: result.rows[0],
             resumen: {
@@ -240,6 +260,7 @@ export const getPagos = async (req, res) => {
     p.fecha,
     p.monto,
     p.es_combo,
+    p.consecutivo,
 
     e.id AS estudiante_id,
     e.nombre AS estudiante,
@@ -252,7 +273,6 @@ export const getPagos = async (req, res) => {
     ce.saldo
 
 FROM pagos p
-
 
 LEFT JOIN estudiantes e 
     ON e.id = p.estudiante_id

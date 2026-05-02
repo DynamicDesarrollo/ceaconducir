@@ -283,8 +283,7 @@ export default function Pagos() {
                                                 {/* FACTURA */}
                                                 <button
                                                     onClick={async () => {
-                                                        // Obtener solo la cuenta, usar datos del row para estudiante
-                                                        const cuentaRes = await api.get(`/estudiantes/cuenta/${row.estudiante_id}`);
+                                                        // Usar los valores históricos si existen
                                                         setFacturaModalData({
                                                             pago: row,
                                                             estudiante: {
@@ -293,7 +292,11 @@ export default function Pagos() {
                                                                 telefono: row.telefono,
                                                                 direccion: row.direccion
                                                             },
-                                                            cuenta: cuentaRes.data,
+                                                            cuenta: {
+                                                                total_curso: row.total_curso_historico ?? row.total_curso,
+                                                                total_pagado: row.total_pagado_historico ?? row.total_pagado,
+                                                                saldo: row.saldo_historico ?? row.saldo
+                                                            },
                                                             cursoNombre: row.categoria ? `Categoría: ${row.categoria}` : (row.combo ? `Combo: ${row.combo}` : '-')
                                                         });
                                                         setShowFacturaModal(true);
