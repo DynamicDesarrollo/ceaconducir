@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { utcToZonedTime } from "date-fns-tz";
 import { getDashboard } from "../api/dashboard";
 import {
   BarChart,
@@ -61,15 +62,16 @@ export default function Dashboard() {
   // KPIs
   const totalEstudiantes = data.estudiantes.length;
 
-  // Fechas para el mes actual
-  const hoy = new Date();
+  // Fechas para el mes actual usando zona horaria de Colombia
+  const timeZone = 'America/Bogota';
+  const hoy = utcToZonedTime(new Date(), timeZone);
   const anio = hoy.getFullYear();
   const mes = hoy.getMonth();
 
   // Pagos del mes actual
   const pagosMes = data.pagos.filter((p) => {
     if (!p.fecha) return false;
-    const fechaPago = new Date(p.fecha);
+    const fechaPago = utcToZonedTime(new Date(p.fecha), timeZone);
     return (
       fechaPago.getFullYear() === anio &&
       fechaPago.getMonth() === mes
@@ -80,7 +82,7 @@ export default function Dashboard() {
   // Egresos del mes actual
   const egresosMes = data.egresos.filter((e) => {
     if (!e.fecha) return false;
-    const fechaEgreso = new Date(e.fecha);
+    const fechaEgreso = utcToZonedTime(new Date(e.fecha), timeZone);
     return (
       fechaEgreso.getFullYear() === anio &&
       fechaEgreso.getMonth() === mes
