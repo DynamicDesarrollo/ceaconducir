@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { utcToZonedTime } from "date-fns-tz";
+import { useEffect, useState, useMemo } from "react";
 import { getDashboard } from "../api/dashboard";
 import {
   BarChart,
@@ -13,27 +12,6 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
-    // Formateador de moneda COP
-    const formatMoney = (value) =>
-      new Intl.NumberFormat("es-CO", {
-        style: "currency",
-        currency: "COP",
-        minimumFractionDigits: 0,
-      }).format(value);
-
-    // Tooltip personalizado para las gráficas
-    const CustomTooltip = ({ active, payload, label }) => {
-      if (active && payload && payload.length) {
-        return (
-          <div className="bg-white p-2 rounded shadow text-xs border border-gray-200">
-            <span className="font-semibold">{label}</span>
-            <br />
-            <span>{formatMoney(payload[0].value)}</span>
-          </div>
-        );
-      }
-      return null;
-    };
   const [data, setData] = useState({
     estudiantes: [],
     pagos: [],
@@ -41,6 +19,21 @@ export default function Dashboard() {
   });
 
   const [loading, setLoading] = useState(false);
+
+  // 🔹 Formateador COP
+  const formatMoney = (value) =>
+    new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+    }).format(value || 0);
+
+  // 🔹 Parse seguro de fechas (evita bug de zona horaria)
+  const parseFecha = (fechaStr) => {
+    if (!fechaStr) return null;
+    const [year, month, day] = fechaStr.split("T")[0].split("-");
+    return new Date(year, month - 1, day);
+  };
 
   useEffect(() => {
     load();
@@ -58,90 +51,147 @@ export default function Dashboard() {
     }
   };
 
+  // 🔥 OPTIMIZACIÓN: todo el cálculo en useMemo
+  const {
+    totalEstudiantes,
+    totalPagosMes,
+    totalEgresosMes,
+    balanceMes,
+    chartData,
+    pieData,
+  } = useMemo(() => {
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth();
 
-  // KPIs
-  const totalEstudiantes = data.estudiantes.length;
+    // 👥 KPI
+    const totalEstudiantes = data.estudiantes.length;
 
-  // Fechas para el mes actual usando zona horaria de Colombia
-  const timeZone = 'America/Bogota';
-  const hoy = utcToZonedTime(new Date(), timeZone);
-  const anio = hoy.getFullYear();
-  const mes = hoy.getMonth();
+    // 💰 PAGOS DEL MES
+    const pagosMes = data.pagos.filter((p) => {
+      const fecha = parseFecha(p.fecha);
+      return (
+        fecha &&
+        fecha.getFullYear() === anioActual &&
+        fecha.getMonth() === mesActual
+      );
+    });
 
-  // Pagos del mes actual
-  const pagosMes = data.pagos.filter((p) => {
-    if (!p.fecha) return false;
-    const fechaPago = utcToZonedTime(new Date(p.fecha), timeZone);
-    return (
-      fechaPago.getFullYear() === anio &&
-      fechaPago.getMonth() === mes
+    const totalPagosMes = pagosMes.reduce(
+      (acc, p) => acc + Number(p.monto || 0),
+      0
     );
-  });
-  const totalPagosMes = pagosMes.reduce((acc, p) => acc + Number(p.monto || 0), 0);
 
-  // Egresos del mes actual
-  const egresosMes = data.egresos.filter((e) => {
-    if (!e.fecha) return false;
-    const fechaEgreso = utcToZonedTime(new Date(e.fecha), timeZone);
-    return (
-      fechaEgreso.getFullYear() === anio &&
-      fechaEgreso.getMonth() === mes
+    // 💸 EGRESOS DEL MES
+    const egresosMes = data.egresos.filter((e) => {
+      const fecha = parseFecha(e.fecha);
+      return (
+        fecha &&
+        fecha.getFullYear() === anioActual &&
+        fecha.getMonth() === mesActual
+      );
+    });
+
+    const totalEgresosMes = egresosMes.reduce(
+      (acc, e) => acc + Number(e.monto || 0),
+      0
     );
-  });
-  const totalEgresosMes = egresosMes.reduce((acc, e) => acc + Number(e.monto || 0), 0);
 
-  const balanceMes = totalPagosMes - totalEgresosMes;
+    const balanceMes = totalPagosMes - totalEgresosMes;
 
-  // 📊 INGRESOS POR MES
-  const ingresosPorMes = {};
-  data.pagos.forEach((p) => {
-    if (!p.fecha) return;
-    const mes = p.fecha.slice(0, 7);
-    if (!ingresosPorMes[mes]) ingresosPorMes[mes] = 0;
-    ingresosPorMes[mes] += Number(p.monto || 0);
-  });
-  const chartData = Object.keys(ingresosPorMes).map((mes) => ({
-    mes,
-    total: ingresosPorMes[mes],
-  }));
+    // 📊 INGRESOS POR MES (para gráfica)
+    const ingresosPorMes = {};
 
-  // 🥧 TORTA (mensual)
-  const pieData = [
-    { name: "Ingresos", value: totalPagosMes },
-    { name: "Egresos", value: totalEgresosMes },
-  ];
+    data.pagos.forEach((p) => {
+      if (!p.fecha) return;
+
+      const fecha = parseFecha(p.fecha);
+      if (!fecha) return;
+
+      const key = `${fecha.getFullYear()}-${String(
+        fecha.getMonth() + 1
+      ).padStart(2, "0")}`;
+
+      if (!ingresosPorMes[key]) ingresosPorMes[key] = 0;
+      ingresosPorMes[key] += Number(p.monto || 0);
+    });
+
+    const chartData = Object.keys(ingresosPorMes).map((mes) => ({
+      mes,
+      total: ingresosPorMes[mes],
+    }));
+
+    // 🥧 PIE
+    const pieData = [
+      { name: "Ingresos", value: totalPagosMes },
+      { name: "Egresos", value: totalEgresosMes },
+    ];
+
+    return {
+      totalEstudiantes,
+      totalPagosMes,
+      totalEgresosMes,
+      balanceMes,
+      chartData,
+      pieData,
+    };
+  }, [data]);
 
   const COLORS = ["#22c55e", "#ef4444"];
+
+  // Tooltip bonito
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 rounded shadow text-xs border">
+          <strong>{label}</strong>
+          <br />
+          {formatMoney(payload[0].value)}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      {/* KPIs */}
+      {/* 🔹 KPIs */}
       <div className="grid grid-cols-4 gap-4">
         <div className="p-5 bg-blue-500 text-white rounded-xl shadow">
           <p>Estudiantes</p>
           <h2 className="text-3xl font-bold">{totalEstudiantes}</h2>
         </div>
+
         <div className="p-5 bg-green-500 text-white rounded-xl shadow">
           <p>Pagos mes</p>
-          <h2 className="text-3xl font-bold">${totalPagosMes.toLocaleString()}</h2>
+          <h2 className="text-3xl font-bold">
+            {formatMoney(totalPagosMes)}
+          </h2>
         </div>
+
         <div className="p-5 bg-red-500 text-white rounded-xl shadow">
           <p>Egresos mes</p>
-          <h2 className="text-3xl font-bold">${totalEgresosMes.toLocaleString()}</h2>
+          <h2 className="text-3xl font-bold">
+            {formatMoney(totalEgresosMes)}
+          </h2>
         </div>
+
         <div className="p-5 bg-yellow-500 text-white rounded-xl shadow">
           <p>Balance mes</p>
-          <h2 className="text-3xl font-bold">${balanceMes.toLocaleString()}</h2>
+          <h2 className="text-3xl font-bold">
+            {formatMoney(balanceMes)}
+          </h2>
         </div>
       </div>
 
-      {/* GRÁFICAS */}
+      {/* 🔹 GRÁFICAS */}
       <div className="grid grid-cols-2 gap-6">
-        {/* 🥧 TORTA */}
+        {/* 🥧 PIE */}
         <div className="bg-white p-5 rounded-xl shadow">
           <h2 className="font-semibold mb-4">Distribución Financiera</h2>
+
           {totalPagosMes === 0 && totalEgresosMes === 0 ? (
             <p className="text-gray-400">Sin datos</p>
           ) : (
@@ -158,14 +208,16 @@ export default function Dashboard() {
                   <Cell key={index} fill={COLORS[index]} />
                 ))}
               </Pie>
+
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           )}
         </div>
 
-        {/* 📈 BARRAS */}
+        {/* 📊 BARRAS */}
         <div className="bg-white p-5 rounded-xl shadow">
           <h2 className="font-semibold mb-4">Ingresos Mensuales</h2>
+
           {chartData.length === 0 ? (
             <p className="text-gray-400">No hay datos</p>
           ) : (
@@ -173,8 +225,15 @@ export default function Dashboard() {
               <BarChart data={chartData}>
                 <XAxis dataKey="mes" />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="total" fill="#facc15" radius={[6, 6, 0, 0]}
-                  label={{ position: 'top', formatter: formatMoney }}
+
+                <Bar
+                  dataKey="total"
+                  fill="#facc15"
+                  radius={[6, 6, 0, 0]}
+                  label={{
+                    position: "top",
+                    formatter: formatMoney,
+                  }}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -183,7 +242,9 @@ export default function Dashboard() {
       </div>
 
       {loading && (
-        <div className="text-center text-gray-500">Cargando...</div>
+        <div className="text-center text-gray-500">
+          Cargando...
+        </div>
       )}
     </div>
   );
