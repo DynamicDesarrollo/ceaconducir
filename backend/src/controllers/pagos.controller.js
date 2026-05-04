@@ -264,6 +264,9 @@ export const getPagos = async (req, res) => {
 
     e.id AS estudiante_id,
     e.nombre AS estudiante,
+    e.documento,
+    e.telefono,
+    e.direccion,
 
     c.nombre AS categoria,
     co.nombre AS combo,
