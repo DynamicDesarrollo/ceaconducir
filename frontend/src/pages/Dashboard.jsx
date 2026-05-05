@@ -14,6 +14,7 @@ import {
 export default function Dashboard() {
   const [data, setData] = useState({
     estudiantes: [],
+    totalEstudiantes: 0,
     pagos: [],
     egresos: [],
   });
@@ -65,7 +66,7 @@ export default function Dashboard() {
     const mesActual = hoy.getMonth();
 
     // 👥 KPI
-    const totalEstudiantes = data.estudiantes.length;
+    const totalEstudiantes = data.totalEstudiantes;
 
     // 💰 PAGOS DEL MES
     const pagosMes = data.pagos.filter((p) => {
