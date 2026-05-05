@@ -97,13 +97,13 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>TOTAL PAGADO</td>
               <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>
                 {formatMoney(
-                  Math.round((cuenta?.total_pagado || 0) + (pago?.monto || 0))
+                  Math.round(cuenta?.total_pagado || 0)
                 )}
               </td>
             </tr>
             <tr>
               <td style={{ padding: 4, border: "1px solid #2196f3" }}>SALDO</td>
-              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(cuenta?.saldo)}</td>
+              <td style={{ padding: 4, border: "1px solid #2196f3", textAlign: "right" }}>{formatMoney(Math.max(cuenta?.saldo || 0, 0))}</td>
             </tr>
           </tbody>
         </table>

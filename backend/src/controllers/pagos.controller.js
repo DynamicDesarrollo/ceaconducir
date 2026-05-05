@@ -209,7 +209,7 @@ export const registrarPago = async (req, res) => {
         // 📊 9. CALCULAR ESTADO
         // =============================
         const nuevoTotalPagado = totalPagadoActual + montoFinal;
-        const nuevoSaldo = totalCurso - nuevoTotalPagado;
+        const nuevoSaldo = Math.max(totalCurso - nuevoTotalPagado, 0);
 
         let estado = "Pendiente";
         if (nuevoSaldo <= 0) estado = "Pagado";

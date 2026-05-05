@@ -132,8 +132,8 @@ export default function FormPago({ onClose, onSaved }) {
             estudiante: selectedEstudiante,
             cuenta: {
                 ...cuenta,
-                total_pagado: (cuenta?.total_pagado || 0) + montoEnviar,
-                saldo: (cuenta?.saldo || 0) - montoEnviar
+                total_pagado: res.data.resumen?.total_pagado ?? (cuenta?.total_pagado || 0) + montoEnviar,
+                saldo: res.data.resumen?.saldo ?? (cuenta?.saldo || 0) - montoEnviar
             },
             cursoNombre
         });
