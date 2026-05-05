@@ -17,14 +17,14 @@ export default function Estudiantes() {
     const [debouncedQ, setDebouncedQ] = useState("");
 
     const [page, setPage] = useState(1);
-    const limit = 5;
+    const limit = 15;
     const [total, setTotal] = useState(0);
 
     // modal
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
 
-    const totalEstudiantes = data.length;
+    const totalEstudiantes = total;
 
     const pagados = data.filter(e => e.estado_pago === "Pagado").length;
 
