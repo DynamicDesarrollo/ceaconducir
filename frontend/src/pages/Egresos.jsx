@@ -4,6 +4,7 @@ import api from "../api/axios";
 
 export default function Egresos() {
   const [egresos, setEgresos] = useState([]);
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [terceros, setTerceros] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
@@ -104,7 +105,8 @@ export default function Egresos() {
   // =========================
   // TOTAL
   // =========================
-  const total = egresos.reduce(
+  const egresosFiltrados = categoriaFiltro ? egresos.filter(e => e.categoria === categoriaFiltro) : egresos;
+  const total = egresosFiltrados.reduce(
     (acc, item) => acc + Number(item.monto || 0),
     0
   );
@@ -236,6 +238,10 @@ export default function Egresos() {
       render: (row) => row.descripcion || "Sin descripción",
     },
     {
+      title: "Categoría",
+      render: (row) => row.categoria || "-",
+    },
+    {
       title: "Tercero",
       render: (row) => row.tercero || "-",
     },
@@ -298,11 +304,26 @@ export default function Egresos() {
         </button>
       </div>
 
+      {/* FILTRO POR CATEGORÍA */}
+      <div className="flex items-center gap-2 mb-2">
+        <label htmlFor="categoriaFiltro">Filtrar por categoría:</label>
+        <select
+          id="categoriaFiltro"
+          className="border p-2 rounded"
+          value={categoriaFiltro}
+          onChange={e => setCategoriaFiltro(e.target.value)}
+        >
+          <option value="">Todas</option>
+          {categorias.map(c => (
+            <option key={c.id} value={c.nombre}>{c.nombre}</option>
+          ))}
+        </select>
+      </div>
       {/* TABLA */}
       {loading ? (
         <p className="text-center text-gray-400">Cargando...</p>
       ) : (
-        <Table columns={columns} data={egresos} />
+        <Table columns={columns} data={egresosFiltrados} />
       )}
 
       {/* ================= MODAL EGRESO ================= */}
