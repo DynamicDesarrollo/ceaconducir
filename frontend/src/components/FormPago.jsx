@@ -46,7 +46,7 @@ export default function FormPago({ onClose, onSaved }) {
     const loadData = async () => {
         try {
             const [est, cat, com] = await Promise.all([
-                api.get("/estudiantes"),
+                api.get("/estudiantes", { params: { limit: 10000 } }),
                 api.get("/categorias"),
                 api.get("/combos"),
             ]);
