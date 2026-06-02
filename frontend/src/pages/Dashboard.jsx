@@ -24,6 +24,7 @@ export default function Dashboard() {
     egresos: [],
   });
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [allMonths, setAllMonths] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -75,30 +76,34 @@ export default function Dashboard() {
     // 👥 KPI
     const totalEstudiantes = data.totalEstudiantes;
 
-    // 💰 PAGOS DEL MES
-    const pagosMes = data.pagos.filter((p) => {
-      const fecha = parseFecha(p.fecha);
-      return (
-        fecha &&
-        fecha.getFullYear() === anioSeleccionado &&
-        fecha.getMonth() === mesSeleccionado
-      );
-    });
+    // 💰 PAGOS FILTRADOS
+    const pagosMes = allMonths
+      ? data.pagos
+      : data.pagos.filter((p) => {
+          const fecha = parseFecha(p.fecha);
+          return (
+            fecha &&
+            fecha.getFullYear() === anioSeleccionado &&
+            fecha.getMonth() === mesSeleccionado
+          );
+        });
 
     const totalPagosMes = pagosMes.reduce(
       (acc, p) => acc + Number(p.monto || 0),
       0
     );
 
-    // 💸 EGRESOS DEL MES
-    const egresosMes = data.egresos.filter((e) => {
-      const fecha = parseFecha(e.fecha);
-      return (
-        fecha &&
-        fecha.getFullYear() === anioSeleccionado &&
-        fecha.getMonth() === mesSeleccionado
-      );
-    });
+    // 💸 EGRESOS FILTRADOS
+    const egresosMes = allMonths
+      ? data.egresos
+      : data.egresos.filter((e) => {
+          const fecha = parseFecha(e.fecha);
+          return (
+            fecha &&
+            fecha.getFullYear() === anioSeleccionado &&
+            fecha.getMonth() === mesSeleccionado
+          );
+        });
 
     const totalEgresosMes = egresosMes.reduce(
       (acc, e) => acc + Number(e.monto || 0),
@@ -123,18 +128,37 @@ export default function Dashboard() {
       "Dic",
     ];
 
-    const egresosPorMes = new Array(12).fill(0);
+    let chartEgresosData = [];
 
-    data.egresos.forEach((e) => {
-      const fecha = parseFecha(e.fecha);
-      if (!fecha || fecha.getFullYear() !== anioSeleccionado) return;
-      egresosPorMes[fecha.getMonth()] += Number(e.monto || 0);
-    });
+    if (allMonths) {
+      const egresosPorMesGlobal = {};
+      data.egresos.forEach((e) => {
+        const fecha = parseFecha(e.fecha);
+        if (!fecha) return;
+        const key = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
+        if (!egresosPorMesGlobal[key]) egresosPorMesGlobal[key] = 0;
+        egresosPorMesGlobal[key] += Number(e.monto || 0);
+      });
 
-    const chartEgresosData = monthNames.map((mes, idx) => ({
-      mes,
-      total: egresosPorMes[idx],
-    }));
+      chartEgresosData = Object.keys(egresosPorMesGlobal)
+        .sort()
+        .map((mes) => ({
+          mes,
+          total: egresosPorMesGlobal[mes],
+        }));
+    } else {
+      const egresosPorMes = new Array(12).fill(0);
+      data.egresos.forEach((e) => {
+        const fecha = parseFecha(e.fecha);
+        if (!fecha || fecha.getFullYear() !== anioSeleccionado) return;
+        egresosPorMes[fecha.getMonth()] += Number(e.monto || 0);
+      });
+
+      chartEgresosData = monthNames.map((mes, idx) => ({
+        mes,
+        total: egresosPorMes[idx],
+      }));
+    }
 
     // 🥧 PIE
     const pieData = [
@@ -150,7 +174,7 @@ export default function Dashboard() {
       chartEgresosData,
       pieData,
     };
-  }, [data, selectedMonth, currentMonth]);
+  }, [data, selectedMonth, currentMonth, allMonths]);
 
   const COLORS = ["#22c55e", "#ef4444"];
 
@@ -178,13 +202,30 @@ export default function Dashboard() {
             <input
               type="month"
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setAllMonths(false);
+              }}
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
             />
           </div>
           <button
             type="button"
-            onClick={() => setSelectedMonth(currentMonth)}
+            onClick={() => setAllMonths(true)}
+            className={`h-[42px] rounded-lg border px-4 text-sm font-medium ${
+              allMonths
+                ? "border-blue-600 bg-blue-50 text-blue-700"
+                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedMonth(currentMonth);
+              setAllMonths(false);
+            }}
             className="h-[42px] rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Mes actual
@@ -200,21 +241,21 @@ export default function Dashboard() {
         </div>
 
         <div className="p-5 bg-green-500 text-white rounded-xl shadow">
-          <p>Pagos mes</p>
+          <p>{allMonths ? "Pagos total" : "Pagos mes"}</p>
           <h2 className="text-3xl font-bold">
             {formatMoney(totalPagosMes)}
           </h2>
         </div>
 
         <div className="p-5 bg-red-500 text-white rounded-xl shadow">
-          <p>Egresos mes</p>
+          <p>{allMonths ? "Egresos total" : "Egresos mes"}</p>
           <h2 className="text-3xl font-bold">
             {formatMoney(totalEgresosMes)}
           </h2>
         </div>
 
         <div className="p-5 bg-yellow-500 text-white rounded-xl shadow">
-          <p>Balance mes</p>
+          <p>{allMonths ? "Balance total" : "Balance mes"}</p>
           <h2 className="text-3xl font-bold">
             {formatMoney(balanceMes)}
           </h2>
