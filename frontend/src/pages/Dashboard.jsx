@@ -172,14 +172,23 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600 mb-1">Filtrar por mes</label>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
-          />
+        <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+          <div className="flex flex-col">
+            <label className="text-sm text-gray-600 mb-1">Filtrar por mes</label>
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedMonth(currentMonth)}
+            className="h-[42px] rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Mes actual
+          </button>
         </div>
       </div>
 
