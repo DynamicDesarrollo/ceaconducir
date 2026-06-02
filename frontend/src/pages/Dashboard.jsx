@@ -12,12 +12,18 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
+  const today = new Date();
+  const currentMonth = `${today.getFullYear()}-${String(
+    today.getMonth() + 1
+  ).padStart(2, "0")}`;
+
   const [data, setData] = useState({
     estudiantes: [],
     totalEstudiantes: 0,
     pagos: [],
     egresos: [],
   });
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const [loading, setLoading] = useState(false);
 
@@ -58,12 +64,13 @@ export default function Dashboard() {
     totalPagosMes,
     totalEgresosMes,
     balanceMes,
-    chartData,
+    chartEgresosData,
     pieData,
   } = useMemo(() => {
-    const hoy = new Date();
-    const anioActual = hoy.getFullYear();
-    const mesActual = hoy.getMonth();
+    const [selectedYearStr, selectedMonthStr] = (selectedMonth || currentMonth)
+      .split("-");
+    const anioSeleccionado = Number(selectedYearStr);
+    const mesSeleccionado = Number(selectedMonthStr) - 1;
 
     // 👥 KPI
     const totalEstudiantes = data.totalEstudiantes;
@@ -73,8 +80,8 @@ export default function Dashboard() {
       const fecha = parseFecha(p.fecha);
       return (
         fecha &&
-        fecha.getFullYear() === anioActual &&
-        fecha.getMonth() === mesActual
+        fecha.getFullYear() === anioSeleccionado &&
+        fecha.getMonth() === mesSeleccionado
       );
     });
 
@@ -88,8 +95,8 @@ export default function Dashboard() {
       const fecha = parseFecha(e.fecha);
       return (
         fecha &&
-        fecha.getFullYear() === anioActual &&
-        fecha.getMonth() === mesActual
+        fecha.getFullYear() === anioSeleccionado &&
+        fecha.getMonth() === mesSeleccionado
       );
     });
 
@@ -100,26 +107,33 @@ export default function Dashboard() {
 
     const balanceMes = totalPagosMes - totalEgresosMes;
 
-    // 📊 INGRESOS POR MES (para gráfica)
-    const ingresosPorMes = {};
+    // 📊 EGRESOS POR MES DEL AÑO SELECCIONADO
+    const monthNames = [
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic",
+    ];
 
-    data.pagos.forEach((p) => {
-      if (!p.fecha) return;
+    const egresosPorMes = new Array(12).fill(0);
 
-      const fecha = parseFecha(p.fecha);
-      if (!fecha) return;
-
-      const key = `${fecha.getFullYear()}-${String(
-        fecha.getMonth() + 1
-      ).padStart(2, "0")}`;
-
-      if (!ingresosPorMes[key]) ingresosPorMes[key] = 0;
-      ingresosPorMes[key] += Number(p.monto || 0);
+    data.egresos.forEach((e) => {
+      const fecha = parseFecha(e.fecha);
+      if (!fecha || fecha.getFullYear() !== anioSeleccionado) return;
+      egresosPorMes[fecha.getMonth()] += Number(e.monto || 0);
     });
 
-    const chartData = Object.keys(ingresosPorMes).map((mes) => ({
+    const chartEgresosData = monthNames.map((mes, idx) => ({
       mes,
-      total: ingresosPorMes[mes],
+      total: egresosPorMes[idx],
     }));
 
     // 🥧 PIE
@@ -133,10 +147,10 @@ export default function Dashboard() {
       totalPagosMes,
       totalEgresosMes,
       balanceMes,
-      chartData,
+      chartEgresosData,
       pieData,
     };
-  }, [data]);
+  }, [data, selectedMonth, currentMonth]);
 
   const COLORS = ["#22c55e", "#ef4444"];
 
@@ -156,10 +170,21 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600 mb-1">Filtrar por mes</label>
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+          />
+        </div>
+      </div>
 
       {/* 🔹 KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="p-5 bg-blue-500 text-white rounded-xl shadow">
           <p>Estudiantes</p>
           <h2 className="text-3xl font-bold">{totalEstudiantes}</h2>
@@ -188,7 +213,7 @@ export default function Dashboard() {
       </div>
 
       {/* 🔹 GRÁFICAS */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* 🥧 PIE */}
         <div className="bg-white p-5 rounded-xl shadow">
           <h2 className="font-semibold mb-4">Distribución Financiera</h2>
@@ -217,19 +242,19 @@ export default function Dashboard() {
 
         {/* 📊 BARRAS */}
         <div className="bg-white p-5 rounded-xl shadow">
-          <h2 className="font-semibold mb-4">Ingresos Mensuales</h2>
+          <h2 className="font-semibold mb-4">Egresos Mensuales</h2>
 
-          {chartData.length === 0 ? (
+          {chartEgresosData.length === 0 ? (
             <p className="text-gray-400">No hay datos</p>
           ) : (
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={chartData}>
+              <BarChart data={chartEgresosData}>
                 <XAxis dataKey="mes" />
                 <Tooltip content={<CustomTooltip />} />
 
                 <Bar
                   dataKey="total"
-                  fill="#facc15"
+                  fill="#ef4444"
                   radius={[6, 6, 0, 0]}
                   label={{
                     position: "top",
