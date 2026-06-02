@@ -30,7 +30,7 @@ const FacturaPago = forwardRef(({ pago, estudiante, cuenta, cursoNombre }, ref) 
         </div>
         {/* Datos a la izquierda */}
         <div style={{ flex: 2, textAlign: 'left', paddingLeft: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 22 }}>CEA CONDUCIR S.A.S.</div>
+          <div style={{ fontWeight: 700, fontSize: 22 }}>CEA CONDUCIR DE SINCELEJO SEDE 2 S.A.S.</div>
           <div style={{ fontSize: 13 }}>NIT: 901443965-1</div>
           <div style={{ fontSize: 13 }}>Calle 22 # 16-09 Calle Santander - Sincelejo</div>
           <div style={{ fontSize: 13 }}>Tel: 301 270 4886</div>
