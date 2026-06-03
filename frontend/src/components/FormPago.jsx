@@ -80,7 +80,9 @@ export default function FormPago({ onClose, onSaved }) {
         }
     }, [form, categorias, combos]);
 
-    const totalFinal = montoManual ? Number(montoManual) : precio;
+   const totalFinal = montoManual
+    ? Number(montoManual)
+    : (cuenta?.saldo || precio);
 
     // 🔄 AUTOCARGAR CATEGORÍA
     useEffect(() => {
@@ -223,214 +225,219 @@ export default function FormPago({ onClose, onSaved }) {
 
     return (
         <>
-        {/* MODAL FACTURA (fuera del flujo principal para evitar problemas de ciclo de vida) */}
-        {showFactura && facturaData && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" style={{ pointerEvents: 'auto' }}>
-                <div className="bg-white p-6 rounded-xl w-full max-w-2xl flex flex-col items-center" style={{ zIndex: 1001, pointerEvents: 'auto' }}>
-                    <FacturaPago ref={facturaRef} {...facturaData} />
-                    <div className="flex gap-4 mt-4">
-                        <button onClick={handlePrint} className="bg-blue-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Imprimir</button>
-                        <button onClick={handlePrint} className="bg-gray-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Expedir copia</button>
-                        <button onClick={() => { setShowFactura(false); onClose(); }} className="border px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Cerrar</button>
+            {/* MODAL FACTURA (fuera del flujo principal para evitar problemas de ciclo de vida) */}
+            {showFactura && facturaData && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" style={{ pointerEvents: 'auto' }}>
+                    <div className="bg-white p-6 rounded-xl w-full max-w-2xl flex flex-col items-center" style={{ zIndex: 1001, pointerEvents: 'auto' }}>
+                        <FacturaPago ref={facturaRef} {...facturaData} />
+                        <div className="flex gap-4 mt-4">
+                            <button onClick={handlePrint} className="bg-blue-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Imprimir</button>
+                            <button onClick={handlePrint} className="bg-gray-600 text-white px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Expedir copia</button>
+                            <button onClick={() => { setShowFactura(false); onClose(); }} className="border px-4 py-2 rounded" style={{ zIndex: 1100, pointerEvents: 'auto' }}>Cerrar</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-        {!showFactura && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-xl w-full max-w-lg space-y-4">
+            )}
+            {!showFactura && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl w-full max-w-lg space-y-4">
 
-                <h2 className="text-lg font-bold">Registrar Pago</h2>
+                        <h2 className="text-lg font-bold">Registrar Pago</h2>
 
-                <input
-                    placeholder="Buscar estudiante..."
-                    className="w-full border p-2 rounded"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
+                        <input
+                            placeholder="Buscar estudiante..."
+                            className="w-full border p-2 rounded"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
 
-                {search && (
-                    <div className="border max-h-40 overflow-auto rounded">
-                        {filtered.map(e => (
-                            <div
-                                key={e.id}
-                                onClick={() => {
-                                    setSelectedEstudiante(e);
-                                    setForm({ ...form, estudiante_id: e.id });
-                                    setSearch(e.nombre);
-                                    handleSelectEstudiante(e);
-                                }}
-                                className="p-2 cursor-pointer hover:bg-yellow-100"
-                            >
-                                {e.nombre}
+                        {search && (
+                            <div className="border max-h-40 overflow-auto rounded">
+                                {filtered.map(e => (
+                                    <div
+                                        key={e.id}
+                                        onClick={() => {
+                                            setSelectedEstudiante(e);
+                                            setForm({ ...form, estudiante_id: e.id });
+                                            setSearch(e.nombre);
+                                            handleSelectEstudiante(e);
+                                        }}
+                                        className="p-2 cursor-pointer hover:bg-yellow-100"
+                                    >
+                                        {e.nombre}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                )}
+                        )}
 
-                {cuenta && (
-                    <div className="bg-gray-100 p-3 rounded text-sm space-y-1">
-                        <div><b>Curso:</b> {cuenta.categoria || "Combo"}</div>
-                        <div><b>Total curso:</b> {formatMoney(cuenta.total_curso)}</div>
-                        <div><b>Total pagado:</b> {formatMoney(cuenta.total_pagado)}</div>
-                        <div><b>Saldo:</b>
-                            <span className={cuenta.saldo > 0 ? "text-red-600" : "text-green-600"}>
-                                {" "}{formatMoney(cuenta.saldo)}
-                            </span>
-                        </div>
-                    </div>
-                )}
+                        {cuenta && (
+                            <div className="bg-gray-100 p-3 rounded text-sm space-y-1">
+                                <div>
+                                    <b>Curso:</b>{" "}
+                                    {cuenta.categoria || cuenta.combo || "Sin asignar"}
+                                </div>
+                                <div><b>Total curso:</b> {formatMoney(cuenta.total_curso)}</div>
+                                <div><b>Total pagado:</b> {formatMoney(cuenta.total_pagado)}</div>
+                                <div><b>Saldo:</b>
+                                    <span className={cuenta.saldo > 0 ? "text-red-600" : "text-green-600"}>
+                                        {" "}{formatMoney(cuenta.saldo)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
-                <select
-                    className="w-full border p-2 rounded"
-                    onChange={(e) =>
-                        setForm({
-                            ...form,
-                            es_combo: e.target.value === "combo",
-                            categoria_id: "",
-                            combo_id: ""
-                        })
-                    }
-                >
-                    <option value="categoria">Categoría</option>
-                    <option value="combo">Combo</option>
-                </select>
+                        {!tieneCurso && (
+                            <select
+                                className="w-full border p-2 rounded"
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        es_combo: e.target.value === "combo",
+                                        categoria_id: "",
+                                        combo_id: ""
+                                    })
+                                }
+                            >
+                                <option value="categoria">Categoría</option>
+                                <option value="combo">Combo</option>
+                            </select>
+                        )}
 
-                {/* CATEGORIA */}
-                {!form.es_combo && !tieneCurso && (
-                    <div className="flex gap-2">
-                        <select
-                            className="w-full border p-2 rounded"
-                            value={form.categoria_id}
-                            onChange={(e) =>
-                                setForm({ ...form, categoria_id: e.target.value })
-                            }
-                        >
-                            <option value="">Seleccione categoría</option>
-                            {categorias.map(c => (
-                                <option key={c.id} value={c.id}>
-                                    {c.nombre} - {formatMoney(c.precio_total)}
-                                </option>
-                            ))}
-                        </select>
+                        {/* CATEGORIA */}
+                        {!form.es_combo && !tieneCurso && (
+                            <div className="flex gap-2">
+                                <select
+                                    className="w-full border p-2 rounded"
+                                    value={form.categoria_id}
+                                    onChange={(e) =>
+                                        setForm({ ...form, categoria_id: e.target.value })
+                                    }
+                                >
+                                    <option value="">Seleccione categoría</option>
+                                    {categorias.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.nombre} - {formatMoney(c.precio_total)}
+                                        </option>
+                                    ))}
+                                </select>
 
-                        <button onClick={() => setOpenCat(true)} className="bg-blue-500 text-white px-3 rounded">
-                            +
-                        </button>
-                    </div>
-                )}
+                                <button onClick={() => setOpenCat(true)} className="bg-blue-500 text-white px-3 rounded">
+                                    +
+                                </button>
+                            </div>
+                        )}
 
-                {/* COMBO */}
-                {form.es_combo && (
-                    <div className="flex gap-2">
-                        <select
-                            className="w-full border p-2 rounded"
-                            value={form.combo_id}
-                            onChange={(e) =>
-                                setForm({ ...form, combo_id: e.target.value })
-                            }
-                        >
-                            <option value="">Seleccione combo</option>
-                            {combos.map(c => (
-                                <option key={c.id} value={c.id}>
-                                    {c.nombre} - {formatMoney(c.precio_combo)}
-                                </option>
-                            ))}
-                        </select>
+                        {/* COMBO */}
+                        {form.es_combo && (
+                            <div className="flex gap-2">
+                                <select
+                                    className="w-full border p-2 rounded"
+                                    value={form.combo_id}
+                                    onChange={(e) =>
+                                        setForm({ ...form, combo_id: e.target.value })
+                                    }
+                                >
+                                    <option value="">Seleccione combo</option>
+                                    {combos.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.nombre} - {formatMoney(c.precio_combo)}
+                                        </option>
+                                    ))}
+                                </select>
 
-                        <button onClick={() => setOpenCombo(true)} className="bg-blue-500 text-white px-3 rounded">
-                            +
-                        </button>
-                    </div>
-                )}
-
-                <input
-                    type="number"
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="Monto opcional"
-                    value={montoManual}
-                    onChange={(e) => setMontoManual(e.target.value)}
-                />
-
-                <div className="text-green-600 font-bold">
-                    Total: {formatMoney(totalFinal)}
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="border px-4 py-2 rounded">
-                        Cancelar
-                    </button>
-                    <button onClick={handleSubmit} className="bg-yellow-500 px-4 py-2 rounded font-semibold">
-                        Guardar
-                    </button>
-                </div>
-            </div>
-
-            {/* MODAL CATEGORIA */}
-            {openCat && (
-                <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-                    <div className="bg-white p-5 rounded space-y-3 w-80">
-                        <h3 className="font-bold">Nueva Categoría</h3>
+                                <button onClick={() => setOpenCombo(true)} className="bg-blue-500 text-white px-3 rounded">
+                                    +
+                                </button>
+                            </div>
+                        )}
 
                         <input
-                            className="w-full border p-2 rounded"
-                            placeholder="Nombre"
-                            value={newCat.nombre}
-                            onChange={e => setNewCat({ ...newCat, nombre: e.target.value })}
-                        />
-
-                        <input
-                            className="w-full border p-2 rounded"
-                            placeholder="Valor"
                             type="number"
-                            value={newCat.valor}
-                            onChange={e => setNewCat({ ...newCat, valor: e.target.value })}
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="Monto opcional"
+                            value={montoManual}
+                            onChange={(e) => setMontoManual(e.target.value)}
                         />
+
+                        <div className="text-green-600 font-bold">
+                            Total: {formatMoney(totalFinal)}
+                        </div>
 
                         <div className="flex justify-end gap-2">
-                            <button onClick={() => setOpenCat(false)}>Cancelar</button>
-                            <button onClick={crearCategoria} className="bg-blue-600 text-white px-4 py-2 rounded">
+                            <button onClick={onClose} className="border px-4 py-2 rounded">
+                                Cancelar
+                            </button>
+                            <button onClick={handleSubmit} className="bg-yellow-500 px-4 py-2 rounded font-semibold">
                                 Guardar
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
 
-            {/* MODAL COMBO */}
-            {openCombo && (
-                <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-                    <div className="bg-white p-5 rounded space-y-3 w-80">
-                        <h3 className="font-bold">Nuevo Combo</h3>
+                    {/* MODAL CATEGORIA */}
+                    {openCat && (
+                        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+                            <div className="bg-white p-5 rounded space-y-3 w-80">
+                                <h3 className="font-bold">Nueva Categoría</h3>
 
-                        <input
-                            placeholder="Nombre"
-                            value={newCombo.nombre}
-                            onChange={e =>
-                                setNewCombo({ ...newCombo, nombre: e.target.value })
-                            }
-                        />
+                                <input
+                                    className="w-full border p-2 rounded"
+                                    placeholder="Nombre"
+                                    value={newCat.nombre}
+                                    onChange={e => setNewCat({ ...newCat, nombre: e.target.value })}
+                                />
 
-                        <input
-                            placeholder="Precio"
-                            type="number"
-                            value={newCombo.precio}
-                            onChange={e =>
-                                setNewCombo({ ...newCombo, precio: e.target.value })
-                            }
-                        />
+                                <input
+                                    className="w-full border p-2 rounded"
+                                    placeholder="Valor"
+                                    type="number"
+                                    value={newCat.valor}
+                                    onChange={e => setNewCat({ ...newCat, valor: e.target.value })}
+                                />
 
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setOpenCombo(false)}>Cancelar</button>
-                            <button onClick={crearCombo} className="bg-blue-600 text-white px-4 py-2 rounded">
-                                Guardar
-                            </button>
+                                <div className="flex justify-end gap-2">
+                                    <button onClick={() => setOpenCat(false)}>Cancelar</button>
+                                    <button onClick={crearCategoria} className="bg-blue-600 text-white px-4 py-2 rounded">
+                                        Guardar
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* MODAL COMBO */}
+                    {openCombo && (
+                        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+                            <div className="bg-white p-5 rounded space-y-3 w-80">
+                                <h3 className="font-bold">Nuevo Combo</h3>
+
+                                <input
+                                    placeholder="Nombre"
+                                    value={newCombo.nombre}
+                                    onChange={e =>
+                                        setNewCombo({ ...newCombo, nombre: e.target.value })
+                                    }
+                                />
+
+                                <input
+                                    placeholder="Precio"
+                                    type="number"
+                                    value={newCombo.precio}
+                                    onChange={e =>
+                                        setNewCombo({ ...newCombo, precio: e.target.value })
+                                    }
+                                />
+
+                                <div className="flex justify-end gap-2">
+                                    <button onClick={() => setOpenCombo(false)}>Cancelar</button>
+                                    <button onClick={crearCombo} className="bg-blue-600 text-white px-4 py-2 rounded">
+                                        Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
-        </div>
-        )}
         </>
     );
 }

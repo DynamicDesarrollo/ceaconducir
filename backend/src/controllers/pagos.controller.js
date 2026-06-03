@@ -38,9 +38,16 @@ export const registrarPago = async (req, res) => {
         // 🔥 1. OBTENER ESTUDIANTE (PRIMERO SIEMPRE)
         // =============================
         const estudianteDB = await pool.query(
-            `SELECT id, nombre, email, total_curso, total_pagado 
-             FROM estudiantes 
-             WHERE id = $1`,
+            `SELECT
+                e.id,
+                e.nombre,
+                e.email,
+                m.total_curso,
+                m.total_pagado
+             FROM estudiantes e
+             LEFT JOIN matriculas m
+                ON m.estudiante_id = e.id
+             WHERE e.id = $1`,
             [estudiante_id]
         );
 
@@ -109,9 +116,9 @@ export const registrarPago = async (req, res) => {
             totalCurso = precioBase;
 
             await pool.query(
-                `UPDATE estudiantes 
+                `UPDATE matriculas
                  SET total_curso = $1
-                 WHERE id = $2`,
+                 WHERE estudiante_id = $2`,
                 [totalCurso, estudiante_id]
             );
         }
@@ -219,11 +226,11 @@ export const registrarPago = async (req, res) => {
         // 🧠 10. ACTUALIZAR ESTUDIANTE
         // =============================
         await pool.query(
-            `UPDATE estudiantes 
+            `UPDATE matriculas
              SET total_pagado = $1,
-                 saldo = $2,
-                 estado_pago = $3
-             WHERE id = $4`,
+                saldo = $2,
+                estado = $3
+             WHERE estudiante_id = $4`,
             [nuevoTotalPagado, nuevoSaldo, estado, estudiante_id]
         );
 
@@ -389,61 +396,61 @@ export const getPagosByEstudiante = async (req, res) => {
 };
 
 export const eliminarPago = async (req, res) => {
-  const { id } = req.params;
+    const { id } = req.params;
 
-  try {
-    const pago = await pool.query(
-      "SELECT * FROM pagos WHERE id = $1",
-      [id]
-    );
+    try {
+        const pago = await pool.query(
+            "SELECT * FROM pagos WHERE id = $1",
+            [id]
+        );
 
-    if (pago.rows.length === 0) {
-      return res.status(404).json({ msg: "Pago no encontrado" });
+        if (pago.rows.length === 0) {
+            return res.status(404).json({ msg: "Pago no encontrado" });
+        }
+
+        const estudiante_id = pago.rows[0].estudiante_id;
+
+        await pool.query("DELETE FROM pagos WHERE id = $1", [id]);
+
+        // 🔥 recalcular cuenta
+        await recalcularCuenta(estudiante_id);
+
+        res.json({ msg: "Pago eliminado" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Error al eliminar pago" });
     }
-
-    const estudiante_id = pago.rows[0].estudiante_id;
-
-    await pool.query("DELETE FROM pagos WHERE id = $1", [id]);
-
-    // 🔥 recalcular cuenta
-    await recalcularCuenta(estudiante_id);
-
-    res.json({ msg: "Pago eliminado" });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Error al eliminar pago" });
-  }
 };
 
 export const actualizarPago = async (req, res) => {
-  const { id } = req.params;
-  const { monto } = req.body;
+    const { id } = req.params;
+    const { monto } = req.body;
 
-  try {
-    const pago = await pool.query(
-      "SELECT * FROM pagos WHERE id = $1",
-      [id]
-    );
+    try {
+        const pago = await pool.query(
+            "SELECT * FROM pagos WHERE id = $1",
+            [id]
+        );
 
-    if (pago.rows.length === 0) {
-      return res.status(404).json({ msg: "Pago no encontrado" });
+        if (pago.rows.length === 0) {
+            return res.status(404).json({ msg: "Pago no encontrado" });
+        }
+
+        const estudiante_id = pago.rows[0].estudiante_id;
+
+        await pool.query(
+            `UPDATE pagos SET monto = $1 WHERE id = $2`,
+            [monto, id]
+        );
+
+        // 🔥 recalcular cuenta
+        await recalcularCuenta(estudiante_id);
+
+        res.json({ msg: "Pago actualizado" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Error al actualizar pago" });
     }
-
-    const estudiante_id = pago.rows[0].estudiante_id;
-
-    await pool.query(
-      `UPDATE pagos SET monto = $1 WHERE id = $2`,
-      [monto, id]
-    );
-
-    // 🔥 recalcular cuenta
-    await recalcularCuenta(estudiante_id);
-
-    res.json({ msg: "Pago actualizado" });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Error al actualizar pago" });
-  }
 };

@@ -25,6 +25,7 @@ export const crearEstudiante = (data) => {
     telefono: data.telefono,
     direccion: data.direccion,
     email: data.email,
+    foto: data.foto,
   });
 };
 
@@ -38,6 +39,7 @@ export const updateEstudiante = (id, data) => {
     telefono: data.telefono,
     direccion: data.direccion,
     email: data.email,
+    foto: data.foto,
   });
 };
 

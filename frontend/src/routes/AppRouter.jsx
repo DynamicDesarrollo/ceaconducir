@@ -1,3 +1,5 @@
+
+import FichaMatricula from "../pages/FichaMatricula";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
@@ -75,6 +77,16 @@ export default function AppRouter() {
                     }
                 />
 
+                <Route
+                    path="/matriculas/:id/ficha"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <FichaMatricula />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );

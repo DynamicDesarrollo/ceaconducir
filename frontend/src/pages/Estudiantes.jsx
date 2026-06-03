@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 import KPI from "../components/KPI";
 
 export default function Estudiantes() {
-    const columns = ["Nombre", "Documento", "Teléfono", "Direccion", "Email", "Estado"];
+    const columns = ["Foto", "Nombre", "Documento", "Teléfono", "Direccion", "Email", "Estado"];
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -166,14 +166,18 @@ export default function Estudiantes() {
 
                 renderRow={(e) => (
                     <>
+                        <td>
+                          {typeof e.foto === "string" && e.foto.startsWith("data:image") ? (
+                            <img src={e.foto} alt="Foto" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8 }} />
+                          ) : (
+                            "-"
+                          )}
+                        </td>
                         <td>{e.nombre}</td>
                         <td>{e.documento}</td>
                         <td>{e.telefono}</td>
-
-                        {/* 🔥 AQUÍ ESTÁ LA SOLUCIÓN */}
                         <td>{e.direccion || "-"}</td>
                         <td>{e.email || "-"}</td>
-
                         <td>
                             <span
                                 className={`px-2 py-1 text-xs rounded font-semibold ${e.estado_pago === "Pagado"
@@ -200,6 +204,16 @@ export default function Estudiantes() {
                         >
                             Editar
                         </button>
+
+                        {/* Botón para ver ficha matrícula (redirige si hay matrícula asociada) */}
+                        {row.matricula_id && (
+                                                    <a
+                                                        href={`/matriculas/${row.matricula_id}/ficha`}
+                                                        className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                                                    >
+                                                        Ficha
+                                                    </a>
+                        )}
 
                         <button
                             onClick={() => onDelete(row)}

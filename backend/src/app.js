@@ -27,6 +27,8 @@ app.use('/api/egresos', egresosRoutes);
 app.use('/api/vehiculos', vehiculosRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/combos', combosRoutes);
+import matriculasRoutes from "./routes/matriculas.routes.js";
+app.use('/api/matriculas', matriculasRoutes);
 app.use("/api/terceros", tercerosRoutes);
 
 app.use('/api/usuarios', usuariosRoutes);

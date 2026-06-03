@@ -1,39 +1,178 @@
+// =========================
+// CREAR ESTUDIANTE + MATRÍCULA (transacción)
+// =========================
 import { pool } from "../config/db.js";
+const crearEstudianteConMatricula = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const { estudiante, matricula } = req.body;
+        // Crear estudiante SOLO con datos personales
+        const resultEst = await client.query(
+            `INSERT INTO estudiantes 
+            (nombre, documento, telefono, direccion, email, fecha_expedicion, tipo_documento, ciudad, barrio, foto, firma, huella, tipo_persona, pep, origen_recursos, created_at)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW())
+            RETURNING *`,
+            [
+                estudiante.nombre,
+                estudiante.documento,
+                estudiante.telefono,
+                estudiante.direccion,
+                estudiante.email,
+                estudiante.fecha_expedicion,
+                estudiante.tipo_documento,
+                estudiante.ciudad,
+                estudiante.barrio,
+                estudiante.foto,
+                estudiante.firma,
+                estudiante.huella,
+                estudiante.tipo_persona,
+                estudiante.pep,
+                estudiante.origen_recursos
+            ]
+        );
+        const estudianteCreado = resultEst.rows[0];
+        // Crear matrícula
+        // Obtener valor de la categoría
+const categoriaResult = await client.query(
+    `
+    SELECT precio_total
+    FROM categorias
+    WHERE id = $1
+    `,
+    [matricula.categoria_id]
+);
+
+const valorCurso =
+    Number(categoriaResult.rows[0]?.precio_total || 0);
+
+const resultMat = await client.query(
+    `
+    INSERT INTO matriculas
+    (
+        estudiante_id,
+        categoria_id,
+        tipo_tramite,
+        solicitud_runt,
+        certificado_runt,
+        observaciones,
+        fecha_matricula,
+        total_curso,
+        total_pagado,
+        saldo,
+        estado
+    )
+    VALUES
+    (
+        $1,$2,$3,$4,$5,$6,
+        CURRENT_DATE,
+        $7,
+        0,
+        $7,
+        'ACTIVO'
+    )
+    RETURNING *
+    `,
+    [
+        estudianteCreado.id,
+        matricula.categoria_id,
+        matricula.tipo_tramite,
+        matricula.solicitud_runt,
+        matricula.certificado_runt,
+        matricula.observaciones || null,
+        valorCurso
+    ]
+);
+        await client.query('COMMIT');
+        res.json({ estudiante: estudianteCreado, matricula: resultMat.rows[0] });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('ERROR CREAR ESTUDIANTE+MATRICULA:', error);
+        res.status(500).json({ error: error.message });
+    } finally {
+        client.release();
+    }
+};
+
 
 /* =========================
    CREAR
 ========================= */
-export const crearEstudiante = async (req, res) => {
+const crearEstudiante = async (req, res) => {
     try {
+
         const {
             nombre,
             documento,
             telefono,
             direccion,
-            email
+            email,
+            fecha_expedicion,
+            tipo_documento,
+            ciudad,
+            barrio,
+            foto,
+            firma,
+            huella,
+            tipo_persona,
+            pep,
+            origen_recursos
         } = req.body;
 
         const result = await pool.query(
-            `INSERT INTO estudiantes 
-            (nombre, documento, telefono, direccion, email, total_curso, total_pagado, saldo, estado_pago)
-            VALUES ($1,$2,$3,$4,$5,0,0,0,'Sin pago')
+            `INSERT INTO estudiantes
+            (
+                nombre,
+                documento,
+                telefono,
+                direccion,
+                email,
+                fecha_expedicion,
+                tipo_documento,
+                ciudad,
+                barrio,
+                foto,
+                firma,
+                huella,
+                tipo_persona,
+                pep,
+                origen_recursos,
+                created_at
+            )
+            VALUES
+            (
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()
+            )
             RETURNING *`,
-            [nombre, documento, telefono, direccion, email]
+            [
+                nombre,
+                documento,
+                telefono,
+                direccion,
+                email,
+                fecha_expedicion,
+                tipo_documento,
+                ciudad,
+                barrio,
+                foto,
+                firma,
+                huella,
+                tipo_persona,
+                pep,
+                origen_recursos
+            ]
         );
 
         res.json(result.rows[0]);
 
     } catch (error) {
         console.error("ERROR CREAR ESTUDIANTE:", error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message
+        });
     }
 };
-
-
-/* =========================
-   LISTAR + FILTRO + PAGINACIÓN
-========================= */
-export const getEstudiantes = async (req, res) => {
+const getEstudiantes = async (req, res) => {
     try {
         const { q = "", page = 1, limit = 5, mes, anio } = req.query;
 
@@ -52,6 +191,13 @@ export const getEstudiantes = async (req, res) => {
                 e.direccion,
                 e.email,
                 e.created_at,
+                -- matrícula más reciente (por fecha_matricula DESC)
+                (
+                  SELECT m.id FROM matriculas m
+                  WHERE m.estudiante_id = e.id
+                  ORDER BY m.fecha_matricula DESC, m.created_at DESC
+                  LIMIT 1
+                ) AS matricula_id,
                 COALESCE(ce.total_curso,0) as total_curso,
                 COALESCE(ce.total_pagado,0) as total_pagado,
                 COALESCE(ce.saldo,0) as saldo,
@@ -105,26 +251,26 @@ export const getEstudiantes = async (req, res) => {
 /* =========================
    OBTENER CUENTA FINANCIERA (🔥 CLAVE PARA PAGOS)
 ========================= */
-export const getCuentaEstudiante = async (req, res) => {
+const getCuentaEstudiante = async (req, res) => {
     try {
         const { id } = req.params;
 
         const result = await pool.query(`
-  SELECT 
-    ce.total_curso,
-    ce.total_pagado,
-    ce.saldo,
-    p.categoria_id,
-    p.combo_id,
-    p.es_combo,
-    c.nombre as categoria
-  FROM cuentas_estudiante ce
-  LEFT JOIN pagos p ON p.estudiante_id = ce.estudiante_id
-  LEFT JOIN categorias c ON c.id = p.categoria_id
-  WHERE ce.estudiante_id = $1
-  ORDER BY p.fecha DESC
-  LIMIT 1
-`, [id]);
+            SELECT
+                m.total_curso,
+                m.total_pagado,
+                m.saldo,
+                m.categoria_id,
+                m.tipo_tramite,
+                c.nombre AS categoria,
+                c.precio_total
+            FROM matriculas m
+            LEFT JOIN categorias c
+                ON c.id = m.categoria_id
+            WHERE m.estudiante_id = $1
+            ORDER BY m.fecha_matricula DESC
+            LIMIT 1
+        `, [id]);
 
         if (result.rows.length === 0) {
             return res.json({
@@ -139,7 +285,9 @@ export const getCuentaEstudiante = async (req, res) => {
 
     } catch (error) {
         console.error("ERROR CUENTA:", error);
-        res.status(500).json({ msg: "Error al obtener cuenta" });
+        res.status(500).json({
+            msg: "Error al obtener cuenta"
+        });
     }
 };
 
@@ -147,7 +295,7 @@ export const getCuentaEstudiante = async (req, res) => {
 /* =========================
    ACTUALIZAR
 ========================= */
-export const updateEstudiante = async (req, res) => {
+const updateEstudiante = async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -183,7 +331,8 @@ export const updateEstudiante = async (req, res) => {
 /* =========================
    ELIMINAR
 ========================= */
-export const deleteEstudiante = async (req, res) => {
+const deleteEstudiante = async (req, res) => {
+
     try {
         const { id } = req.params;
 
@@ -206,4 +355,12 @@ export const deleteEstudiante = async (req, res) => {
         console.error("ERROR DELETE ESTUDIANTE:", error);
         res.status(500).json({ msg: "Error al eliminar estudiante" });
     }
+};
+export {
+    crearEstudianteConMatricula,
+    crearEstudiante,
+    getEstudiantes,
+    getCuentaEstudiante,
+    updateEstudiante,
+    deleteEstudiante,
 };
