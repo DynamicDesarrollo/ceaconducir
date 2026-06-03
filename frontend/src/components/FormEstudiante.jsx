@@ -485,7 +485,9 @@ export default function FormEstudiante({
                     >
                       <option value="">Seleccione</option>
                       {categorias.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                        <option key={cat.id} value={cat.id}>
+                          {cat.nombre} - ${cat.precio_total?.toLocaleString('es-CO')}
+                        </option>
                       ))}
                     </select>
                   </div>
