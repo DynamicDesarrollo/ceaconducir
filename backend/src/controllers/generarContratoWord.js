@@ -42,11 +42,28 @@ export const generarContratoWord = async (req, res) => {
 
     // 4. Renderizar documento
     const doc = new Docxtemplater(zip, { modules: [imageModule] });
+    
+    // Separar fecha de creación en día, mes y año
+    const separarFecha = (fecha) => {
+      if (!fecha) return { dia: '', mes: '', anio: '' };
+      const d = new Date(fecha);
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const anio = d.getFullYear();
+      return { dia, mes, anio };
+    };
+    
+    const { dia: dia_contrato, mes: mes_contrato, anio: anio_contrato } = separarFecha(data.matricula.created_at);
+    
     // Variables X para tipo de trámite
     const tipoTramite = (data.matricula.tipo_tramite || '').toUpperCase();
     const x_licencia_i = tipoTramite === 'LICENCIA INICIAL' ? 'X' : '';
     const x_validacion_s = tipoTramite === 'VALIDACIÓN DE SABERES' || tipoTramite === 'VALIDACION DE SABERES' ? 'X' : '';
     const x_recategorizacion = tipoTramite === 'RECATEGORIZACIÓN' || tipoTramite === 'RECATEGORIZACION' ? 'X' : '';
+    const categoriaNombre = (data.categoria.nombre || '').toUpperCase();
+    const x_a1 = categoriaNombre.includes('A1') ? 'X' : '';
+    const x_b1 = categoriaNombre.includes('B1') ? 'X' : '';
+    const x_c1 = categoriaNombre.includes('C1') ? 'X' : '';
 
     doc.render({
       nombre: data.estudiante.nombre,
@@ -57,6 +74,9 @@ export const generarContratoWord = async (req, res) => {
       categoria: data.categoria.nombre,
       tramite: data.matricula.tipo_tramite,
       fecha: data.matricula.fecha_matricula,
+      d_c,
+      m_c,
+      a_c,
       foto: data.estudiante.foto,
       firma: data.estudiante.firma,
       certificado_runt: data.matricula.certificado_runt,
@@ -66,6 +86,9 @@ export const generarContratoWord = async (req, res) => {
       x_licencia_i,
       x_validacion_s,
       x_recategorizacion,
+      x_a1,
+      x_b1,
+      x_c1,
     });
 
     const buf = doc.getZip().generate({ type: "nodebuffer" });
