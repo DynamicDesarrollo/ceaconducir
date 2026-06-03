@@ -233,7 +233,7 @@ export default function Pagos() {
                         </thead>
 
                         <tbody>
-                            {pagos.map((row) => {
+                            {filtered.map((row) => {
                                 const estado = getEstadoCurso(row);
 
                                 return (
