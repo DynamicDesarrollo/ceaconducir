@@ -34,55 +34,64 @@ const crearEstudianteConMatricula = async (req, res) => {
         const estudianteCreado = resultEst.rows[0];
         // Crear matrícula
         // Obtener valor de la categoría
-const categoriaResult = await client.query(
-    `
-    SELECT precio_total
-    FROM categorias
-    WHERE id = $1
-    `,
-    [matricula.categoria_id]
-);
+        const precioLista =
+            Number(matricula.precio_lista || 0);
 
-const valorCurso =
-    Number(categoriaResult.rows[0]?.precio_total || 0);
+        const descuento =
+            Number(matricula.descuento || 0);
 
-const resultMat = await client.query(
-    `
+        const valorCurso =
+            Number(matricula.total_curso || 0);
+
+        const resultMat = await client.query(
+            `
     INSERT INTO matriculas
     (
         estudiante_id,
-        categoria_id,
-        tipo_tramite,
-        solicitud_runt,
-        certificado_runt,
-        observaciones,
-        fecha_matricula,
-        total_curso,
-        total_pagado,
-        saldo,
-        estado
+    categoria_id,
+    tipo_tramite,
+    solicitud_runt,
+    certificado_runt,
+    observaciones,
+    fecha_matricula,
+
+    precio_lista,
+    descuento,
+
+    total_curso,
+    total_pagado,
+    saldo,
+    estado
     )
     VALUES
     (
         $1,$2,$3,$4,$5,$6,
-        CURRENT_DATE,
-        $7,
-        0,
-        $7,
-        'ACTIVO'
+    CURRENT_DATE,
+
+    $7,
+    $8,
+
+    $9,
+    0,
+    $9,
+    'ACTIVO'
     )
     RETURNING *
     `,
-    [
-        estudianteCreado.id,
-        matricula.categoria_id,
-        matricula.tipo_tramite,
-        matricula.solicitud_runt,
-        matricula.certificado_runt,
-        matricula.observaciones || null,
-        valorCurso
-    ]
-);
+            [
+                estudianteCreado.id,
+                matricula.categoria_id,
+                matricula.tipo_tramite,
+                matricula.solicitud_runt,
+                matricula.certificado_runt,
+                matricula.observaciones || null,
+
+                precioLista,
+                descuento,
+
+                valorCurso
+            ]
+        );
         await client.query('COMMIT');
         res.json({ estudiante: estudianteCreado, matricula: resultMat.rows[0] });
     } catch (error) {

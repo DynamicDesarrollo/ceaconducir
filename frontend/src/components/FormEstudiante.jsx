@@ -23,6 +23,8 @@ export default function FormEstudiante({
   const [solicitudRunt, setSolicitudRunt] = useState("");
   const [certificadoRunt, setCertificadoRunt] = useState("");
   const [categorias, setCategorias] = useState([]);
+  const [precioLista, setPrecioLista] = useState(0);
+  const [descuento, setDescuento] = useState(0);
 
   // Cargar categorías al montar
   useEffect(() => {
@@ -32,6 +34,25 @@ export default function FormEstudiante({
       });
     });
   }, []);
+
+  useEffect(() => {
+    const categoria = categorias.find(
+      c => c.id === categoriaId
+    );
+
+    if (categoria) {
+      setPrecioLista(
+        Number(categoria.precio_total || 0)
+      );
+    } else {
+      setPrecioLista(0);
+    }
+
+  }, [categoriaId, categorias]);
+
+  const valorFinal =
+    Number(precioLista) -
+    Number(descuento || 0);
 
   // =====================================
   // ESTADO
@@ -233,6 +254,10 @@ export default function FormEstudiante({
             tipo_tramite: tipoTramite,
             solicitud_runt: solicitudRunt,
             certificado_runt: certificadoRunt,
+
+            precio_lista: precioLista,
+            descuento: descuento,
+            total_curso: valorFinal,
           }
         );
         toast.success("Estudiante y matrícula creados");
@@ -490,6 +515,72 @@ export default function FormEstudiante({
                         </option>
                       ))}
                     </select>
+                  </div>
+                  {/* PRECIO LISTA */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">
+                      Precio Lista
+                    </label>
+
+                    <input
+                      type="text"
+                      value={precioLista.toLocaleString("es-CO")}
+                      readOnly
+                      className="
+      w-full
+      border
+      rounded-lg
+      px-3
+      py-2
+      bg-gray-100
+    "
+                    />
+                  </div>
+
+                  {/* DESCUENTO */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">
+                      Descuento
+                    </label>
+
+                    <input
+                      type="number"
+                      value={descuento}
+                      onChange={(e) =>
+                        setDescuento(
+                          Number(e.target.value || 0)
+                        )
+                      }
+                      className="
+      w-full
+      border
+      rounded-lg
+      px-3
+      py-2
+    "
+                    />
+                  </div>
+
+                  {/* VALOR FINAL */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">
+                      Valor Final
+                    </label>
+
+                    <input
+                      type="text"
+                      value={valorFinal.toLocaleString("es-CO")}
+                      readOnly
+                      className="
+      w-full
+      border
+      rounded-lg
+      px-3
+      py-2
+      bg-green-50
+      font-bold
+    "
+                    />
                   </div>
 
                   {/* TIPO TRÁMITE */}
