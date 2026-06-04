@@ -593,11 +593,9 @@ export default function FormEstudiante({
                             </option>
 
                             {categorias.map((cat) => (
-                              <option
-                                key={cat.id}
-                                value={cat.id}
-                              >
-                                {cat.nombre}
+                              <option key={cat.id} value={cat.id}>
+                                {cat.nombre} - $
+                                {Number(cat.precio_total || 0).toLocaleString("es-CO")}
                               </option>
                             ))}
                           </select>
@@ -618,11 +616,9 @@ export default function FormEstudiante({
                             </option>
 
                             {combos.map((combo) => (
-                              <option
-                                key={combo.id}
-                                value={combo.id}
-                              >
-                                {combo.nombre}
+                              <option key={combo.id} value={combo.id}>
+                                {combo.nombre} - $
+                                {Number(combo.precio_combo).toLocaleString("es-CO")}
                               </option>
                             ))}
                           </select>
