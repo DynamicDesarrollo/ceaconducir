@@ -368,28 +368,72 @@ const updateEstudiante = async (req, res) => {
    ELIMINAR
 ========================= */
 const deleteEstudiante = async (req, res) => {
+    const client = await pool.connect();
 
     try {
+
         const { id } = req.params;
 
-        // Eliminar cuenta financiera si existe
-        await pool.query(`DELETE FROM cuentas_estudiante WHERE estudiante_id = $1`, [id]);
+        await client.query("BEGIN");
 
-        // Eliminar estudiante
-        const result = await pool.query(
-            `DELETE FROM estudiantes WHERE id = $1 RETURNING *`,
+        // pagos
+        await client.query(
+            `DELETE FROM pagos
+             WHERE estudiante_id = $1`,
+            [id]
+        );
+
+        // cuenta financiera
+        await client.query(
+            `DELETE FROM cuentas_estudiante
+             WHERE estudiante_id = $1`,
+            [id]
+        );
+
+        // matrícula
+        await client.query(
+            `DELETE FROM matriculas
+             WHERE estudiante_id = $1`,
+            [id]
+        );
+
+        // estudiante
+        const result = await client.query(
+            `DELETE FROM estudiantes
+             WHERE id = $1
+             RETURNING *`,
             [id]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ msg: "Estudiante no encontrado" });
+            await client.query("ROLLBACK");
+
+            return res.status(404).json({
+                msg: "Estudiante no encontrado"
+            });
         }
 
-        res.json({ msg: "Estudiante eliminado correctamente" });
+        await client.query("COMMIT");
+
+        res.json({
+            msg: "Estudiante eliminado correctamente"
+        });
 
     } catch (error) {
-        console.error("ERROR DELETE ESTUDIANTE:", error);
-        res.status(500).json({ msg: "Error al eliminar estudiante" });
+
+        await client.query("ROLLBACK");
+
+        console.error(
+            "ERROR DELETE ESTUDIANTE:",
+            error
+        );
+
+        res.status(500).json({
+            msg: error.message
+        });
+
+    } finally {
+        client.release();
     }
 };
 export {
