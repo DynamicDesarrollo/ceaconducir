@@ -80,9 +80,9 @@ export default function FormPago({ onClose, onSaved }) {
         }
     }, [form, categorias, combos]);
 
-   const totalFinal = montoManual
-    ? Number(montoManual)
-    : (cuenta?.saldo || precio);
+    const totalFinal = montoManual
+        ? Number(montoManual)
+        : (cuenta?.saldo || precio);
 
     // 🔄 AUTOCARGAR CATEGORÍA
     useEffect(() => {
@@ -302,33 +302,37 @@ export default function FormPago({ onClose, onSaved }) {
                                 <option value="combo">Combo</option>
                             </select>
                         )}
+                        {!tieneCurso && (
+                            <>
 
-                        {/* CATEGORIA */}
-                        {!form.es_combo && !tieneCurso && (
-                            <div className="flex gap-2">
-                                <select
-                                    className="w-full border p-2 rounded"
-                                    value={form.categoria_id}
-                                    onChange={(e) =>
-                                        setForm({ ...form, categoria_id: e.target.value })
-                                    }
-                                >
-                                    <option value="">Seleccione categoría</option>
-                                    {categorias.map(c => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.nombre} - {formatMoney(c.precio_total)}
-                                        </option>
-                                    ))}
-                                </select>
+                                {/* CATEGORIA */}
+                                {!form.es_combo && !tieneCurso && (
+                                    <div className="flex gap-2">
+                                        <select
+                                            className="w-full border p-2 rounded"
+                                            value={form.categoria_id}
+                                            onChange={(e) =>
+                                                setForm({ ...form, categoria_id: e.target.value })
+                                            }
+                                        >
+                                            <option value="">Seleccione categoría</option>
+                                            {categorias.map(c => (
+                                                <option key={c.id} value={c.id}>
+                                                    {c.nombre} - {formatMoney(c.precio_total)}
+                                                </option>
+                                            ))}
+                                        </select>
 
-                                <button onClick={() => setOpenCat(true)} className="bg-blue-500 text-white px-3 rounded">
-                                    +
-                                </button>
-                            </div>
+                                        <button onClick={() => setOpenCat(true)} className="bg-blue-500 text-white px-3 rounded">
+                                            +
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {/* COMBO */}
-                        {form.es_combo && (
+                        {form.es_combo && !tieneCurso && (
                             <div className="flex gap-2">
                                 <select
                                     className="w-full border p-2 rounded"

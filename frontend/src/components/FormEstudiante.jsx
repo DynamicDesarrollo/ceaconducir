@@ -18,6 +18,12 @@ export default function FormEstudiante({
   const isEdit = Boolean(initialData?.id);
 
   // NUEVOS ESTADOS PARA MATRÍCULA
+  const [tipoCurso, setTipoCurso] = useState("CATEGORIA");
+
+  const [comboId, setComboId] = useState("");
+
+  const [combos, setCombos] = useState([])
+    ;
   const [categoriaId, setCategoriaId] = useState("");
   const [tipoTramite, setTipoTramite] = useState("");
   const [solicitudRunt, setSolicitudRunt] = useState("");
@@ -32,23 +38,54 @@ export default function FormEstudiante({
       getCategorias().then((data) => {
         setCategorias(data || []);
       });
+      import("../api/combos").then(
+        ({ getCombos }) => {
+          getCombos().then((data) => {
+            console.log("COMBOS:", data);
+            setCombos(data || []);
+          });
+        }
+      );
     });
   }, []);
 
   useEffect(() => {
-    const categoria = categorias.find(
-      c => c.id === categoriaId
-    );
 
-    if (categoria) {
+    if (tipoCurso === "CATEGORIA") {
+
+      const categoria =
+        categorias.find(
+          c => c.id === categoriaId
+        );
+
       setPrecioLista(
-        Number(categoria.precio_total || 0)
+        Number(
+          categoria?.precio_total || 0
+        )
       );
+
     } else {
-      setPrecioLista(0);
+
+      const combo =
+        combos.find(
+          c => c.id === comboId
+        );
+
+      setPrecioLista(
+        Number(
+          combo?.precio_combo || 0
+        )
+      );
+
     }
 
-  }, [categoriaId, categorias]);
+  }, [
+    tipoCurso,
+    categoriaId,
+    comboId,
+    categorias,
+    combos
+  ]);
 
   const valorFinal =
     Number(precioLista) -
@@ -250,13 +287,29 @@ export default function FormEstudiante({
             origen_recursos: form.origen_recursos,
           },
           {
-            categoria_id: categoriaId,
+            categoria_id:
+              tipoCurso === "CATEGORIA"
+                ? categoriaId
+                : null,
+
+            combo_id:
+              tipoCurso === "COMBO"
+                ? comboId
+                : null,
+
+            es_combo:
+              tipoCurso === "COMBO",
+
             tipo_tramite: tipoTramite,
+
             solicitud_runt: solicitudRunt,
+
             certificado_runt: certificadoRunt,
 
             precio_lista: precioLista,
+
             descuento: descuento,
+
             total_curso: valorFinal,
           }
         );
@@ -500,21 +553,82 @@ export default function FormEstudiante({
                       <option value="OTROS">Otros</option>
                     </select>
                   </div>
-                  {/* CATEGORÍA */}
                   <div className="md:col-span-2">
-                    <label className="text-sm font-medium">Categoría</label>
+                    <label>
+                      Tipo Curso
+                    </label>
+
                     <select
-                      value={categoriaId}
-                      onChange={e => setCategoriaId(e.target.value)}
+                      value={tipoCurso}
+                      onChange={(e) =>
+                        setTipoCurso(e.target.value)
+                      }
                       className="w-full border rounded-lg px-3 py-2"
                     >
-                      <option value="">Seleccione</option>
-                      {categorias.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.nombre} - ${cat.precio_total?.toLocaleString('es-CO')}
-                        </option>
-                      ))}
+                      <option value="CATEGORIA">
+                        Categoría
+                      </option>
+
+                      <option value="COMBO">
+                        Combo
+                      </option>
                     </select>
+                  </div>
+                  {/* CATEGORÍA */}
+                  <div className="md:col-span-2">
+                    {
+                      tipoCurso === "CATEGORIA" ? (
+                        <div className="md:col-span-2">
+                          <label>Categoría</label>
+
+                          <select
+                            value={categoriaId}
+                            onChange={(e) =>
+                              setCategoriaId(e.target.value)
+                            }
+                            className="w-full border rounded-lg px-3 py-2"
+                          >
+                            <option value="">
+                              Seleccione
+                            </option>
+
+                            {categorias.map((cat) => (
+                              <option
+                                key={cat.id}
+                                value={cat.id}
+                              >
+                                {cat.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="md:col-span-2">
+                          <label>Combo</label>
+
+                          <select
+                            value={comboId}
+                            onChange={(e) =>
+                              setComboId(e.target.value)
+                            }
+                            className="w-full border rounded-lg px-3 py-2"
+                          >
+                            <option value="">
+                              Seleccione
+                            </option>
+
+                            {combos.map((combo) => (
+                              <option
+                                key={combo.id}
+                                value={combo.id}
+                              >
+                                {combo.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )
+                    }
                   </div>
                   {/* PRECIO LISTA */}
                   <div className="md:col-span-2">

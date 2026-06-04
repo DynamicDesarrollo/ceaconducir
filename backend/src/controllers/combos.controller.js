@@ -38,22 +38,21 @@ export const crearCombo = async (req, res) => {
 // =============================
 export const getCombos = async (req, res) => {
   try {
-    const empresa_id = req.user.empresa_id;
 
-    const result = await pool.query(
-      `SELECT * FROM combos 
-       WHERE empresa_id = $1
-       ORDER BY nombre`,
-      [empresa_id]
-    );
+    console.log("USER:", req.user);
+
+    const result = await pool.query(`
+      SELECT *
+      FROM combos
+      ORDER BY nombre
+    `);
+
+    console.log("COMBOS:", result.rows);
 
     res.json(result.rows);
 
   } catch (error) {
-    console.error("ERROR COMBOS:", error);
-    res.status(500).json({
-      msg: "Error al obtener combos",
-      error: error.message,
-    });
+    console.error(error);
+    res.status(500).json(error);
   }
 };

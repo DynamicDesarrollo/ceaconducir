@@ -43,12 +43,18 @@ const crearEstudianteConMatricula = async (req, res) => {
         const valorCurso =
             Number(matricula.total_curso || 0);
 
+        const esCombo = matricula.es_combo || false;
+        const comboId = matricula.combo_id || null;
+
         const resultMat = await client.query(
             `
     INSERT INTO matriculas
-    (
-        estudiante_id,
+(
+    estudiante_id,
     categoria_id,
+    combo_id,
+    es_combo,
+
     tipo_tramite,
     solicitud_runt,
     certificado_runt,
@@ -62,25 +68,31 @@ const crearEstudianteConMatricula = async (req, res) => {
     total_pagado,
     saldo,
     estado
-    )
+)
     VALUES
-    (
-        $1,$2,$3,$4,$5,$6,
+(
+    $1,$2,$3,$4,
+
+    $5,$6,$7,$8,
     CURRENT_DATE,
 
-    $7,
-    $8,
+    $9,
+    $10,
 
-    $9,
+    $11,
     0,
-    $9,
+    $11,
     'ACTIVO'
-    )
+)
     RETURNING *
     `,
             [
                 estudianteCreado.id,
-                matricula.categoria_id,
+
+                matricula.categoria_id || null,
+                comboId,
+                esCombo,
+
                 matricula.tipo_tramite,
                 matricula.solicitud_runt,
                 matricula.certificado_runt,
@@ -265,28 +277,43 @@ const getCuentaEstudiante = async (req, res) => {
         const { id } = req.params;
 
         const result = await pool.query(`
-            SELECT
-                m.total_curso,
-                m.total_pagado,
-                m.saldo,
-                m.categoria_id,
-                m.tipo_tramite,
-                c.nombre AS categoria,
-                c.precio_total
-            FROM matriculas m
-            LEFT JOIN categorias c
-                ON c.id = m.categoria_id
-            WHERE m.estudiante_id = $1
-            ORDER BY m.fecha_matricula DESC
-            LIMIT 1
-        `, [id]);
+    SELECT
+        m.total_curso,
+        m.total_pagado,
+        m.saldo,
+
+        m.categoria_id,
+        m.combo_id,
+        m.es_combo,
+
+        m.tipo_tramite,
+
+        c.nombre AS categoria,
+        c.precio_total,
+
+        co.nombre AS combo,
+        co.precio_combo
+
+    FROM matriculas m
+
+    LEFT JOIN categorias c
+        ON c.id = m.categoria_id
+
+    LEFT JOIN combos co
+        ON co.id = m.combo_id
+
+    WHERE m.estudiante_id = $1
+    ORDER BY m.fecha_matricula DESC
+    LIMIT 1
+`, [id]);
 
         if (result.rows.length === 0) {
             return res.json({
                 total_curso: 0,
                 total_pagado: 0,
                 saldo: 0,
-                categoria: null
+                categoria: null,
+                combo: null
             });
         }
 
