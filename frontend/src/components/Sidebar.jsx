@@ -52,7 +52,7 @@ export default function Sidebar() {
   let user = null;
   try {
     user = JSON.parse(localStorage.getItem("user"));
-  } catch {}
+  } catch { }
 
   const isAdmin = user?.rol === "ADMIN" || user?.rol_id === 1 || user?.rol === 1;
 
@@ -62,12 +62,21 @@ export default function Sidebar() {
       items: [
         { name: "Dashboard", icon: Home, path: "/" },
         { name: "Estudiantes", icon: Users, path: "/estudiantes" },
-        // Solo admin ve Usuarios
+
         ...(isAdmin
           ? [{ name: "Usuarios", icon: Users, path: "/usuarios" }]
           : []),
       ],
     },
+
+    {
+      title: "Configuración",
+      items: [
+        { name: "Categorías", icon: BookOpen, path: "/categorias" },
+        { name: "Combos", icon: BookOpen, path: "/combos" },
+      ],
+    },
+
     {
       title: "Finanzas",
       items: [

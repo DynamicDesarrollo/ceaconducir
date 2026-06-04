@@ -35,3 +35,59 @@ export const getCategorias = async (req, res) => {
   );
   res.json(result.rows);
 };
+
+// =============================
+// 🔹 ACTUALIZAR
+// =============================
+export const actualizarCategoria = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, precio_total } = req.body;
+
+    const result = await pool.query(
+      `
+      UPDATE categorias
+      SET
+        nombre = $1,
+        precio_total = $2
+      WHERE id = $3
+      RETURNING *
+      `,
+      [nombre, precio_total, id]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      msg: "Error actualizando categoría",
+    });
+  }
+};
+
+// =============================
+// 🔹 ELIMINAR
+// =============================
+export const eliminarCategoria = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pool.query(
+      `DELETE FROM categorias WHERE id = $1`,
+      [id]
+    );
+
+    res.json({
+      msg: "Categoría eliminada",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      msg: "Error eliminando categoría",
+    });
+  }
+};

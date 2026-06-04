@@ -12,6 +12,9 @@ import ProtectedRoute from "./ProtectedRoute";
 import { Navigate } from "react-router-dom";
 import Usuarios from "../pages/Usuarios";
 
+import Categorias from "../pages/Categorias";
+import Combos from "../pages/Combos";
+
 export default function AppRouter() {
     return (
         <BrowserRouter>
@@ -72,6 +75,27 @@ export default function AppRouter() {
                         <ProtectedRoute adminOnly={true}>
                             <MainLayout>
                                 <Usuarios />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/categorias"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Categorias />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/combos"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <Combos />
                             </MainLayout>
                         </ProtectedRoute>
                     }

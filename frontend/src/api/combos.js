@@ -9,3 +9,13 @@ export const crearCombo = async (data) => {
   const res = await api.post("/combos", data);
   return res.data;
 };
+
+export const actualizarCombo = async (id, data) => {
+  const res = await api.put(`/combos/${id}`, data);
+  return res.data;
+};
+
+export const eliminarCombo = async (id) => {
+  const res = await api.delete(`/combos/${id}`);
+  return res.data;
+};
