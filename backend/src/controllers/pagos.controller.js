@@ -314,22 +314,26 @@ export const getDetalleEstudiante = async (req, res) => {
 
     try {
 
-        // 🧠 INFO PRINCIPAL
         const estudiante = await pool.query(`
-            SELECT 
-                id,
-                nombre,
-                total_curso,
-                total_pagado,
-                saldo,
-                estado_pago
-            FROM estudiantes
-            WHERE id = $1
+            SELECT
+                e.id,
+                e.nombre,
+
+                m.total_curso,
+                m.total_pagado,
+                m.saldo,
+                m.estado
+
+            FROM estudiantes e
+
+            LEFT JOIN matriculas m
+                ON m.estudiante_id = e.id
+
+            WHERE e.id = $1
         `, [id]);
 
-        // 📚 HISTORIAL DE PAGOS
         const historial = await pool.query(`
-            SELECT 
+            SELECT
                 fecha,
                 monto,
                 es_combo,
@@ -347,7 +351,9 @@ export const getDetalleEstudiante = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+            error: error.message
+        });
     }
 };
 
@@ -358,24 +364,33 @@ export const getPagosByEstudiante = async (req, res) => {
     const { id } = req.params;
 
     try {
+
         const estudiante = await pool.query(`
-            SELECT 
-                id,
-                nombre,
-                total_curso,
-                total_pagado,
-                saldo,
-                estado_pago
-            FROM estudiantes
-            WHERE id = $1
+            SELECT
+                e.id,
+                e.nombre,
+
+                m.total_curso,
+                m.total_pagado,
+                m.saldo,
+                m.estado
+
+            FROM estudiantes e
+
+            LEFT JOIN matriculas m
+                ON m.estudiante_id = e.id
+
+            WHERE e.id = $1
         `, [id]);
 
         if (estudiante.rows.length === 0) {
-            return res.status(404).json({ error: "Estudiante no encontrado" });
+            return res.status(404).json({
+                error: "Estudiante no encontrado"
+            });
         }
 
         const historial = await pool.query(`
-            SELECT 
+            SELECT
                 fecha,
                 monto
             FROM pagos
@@ -383,15 +398,20 @@ export const getPagosByEstudiante = async (req, res) => {
             ORDER BY fecha DESC
         `, [id]);
 
-        // 🔥 MISMO FORMATO EN TODOS
         res.json({
             estudiante: estudiante.rows[0],
             historial: historial.rows
         });
 
     } catch (error) {
-        console.error("ERROR DETALLE ESTUDIANTE:", error);
-        res.status(500).json({ error: error.message });
+        console.error(
+            "ERROR DETALLE ESTUDIANTE:",
+            error
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
     }
 };
 
