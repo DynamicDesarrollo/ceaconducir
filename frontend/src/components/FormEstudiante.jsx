@@ -129,7 +129,11 @@ export default function FormEstudiante({
       nombre: initialData.nombre || "",
       documento: initialData.documento || "",
       tipo_documento: initialData.tipo_documento || "CC",
-      fecha_expedicion: initialData.fecha_expedicion || "",
+
+      fecha_expedicion: initialData.fecha_expedicion
+        ? initialData.fecha_expedicion.split("T")[0]
+        : "",
+
       telefono: initialData.telefono || "",
       direccion: initialData.direccion || "",
       email: initialData.email || "",
@@ -142,7 +146,6 @@ export default function FormEstudiante({
       pep: initialData.pep || "NO",
       origen_recursos: initialData.origen_recursos || "SALARIO",
     });
-
     // =====================
     // DATOS MATRICULA
     // =====================
