@@ -1,3 +1,4 @@
+import { pool } from "../config/db.js";
 import fs from "fs";
 import path from "path";
 import PizZip from "pizzip";
@@ -91,11 +92,25 @@ async function generarContratoWord(req, res) {
 
         const { dia: d_c, mes: m_c, anio: a_c } = separarFecha(data.matricula.created_at);
 
+        const formatearFecha = (fecha) => {
+            if (!fecha) return "";
+
+            const d = new Date(fecha);
+
+            const dia = String(d.getDate()).padStart(2, "0");
+            const mes = String(d.getMonth() + 1).padStart(2, "0");
+            const anio = d.getFullYear();
+
+            return `${dia}/${mes}/${anio}`;
+        };
+
         doc.render({
             nombre: data.estudiante.nombre,
             tipo_documento: data.estudiante.tipo_documento,
             documento: data.estudiante.documento,
-            fecha_expedicion: data.estudiante.fecha_expedicion,
+            fecha_exp: formatearFecha(
+                data.estudiante.fecha_expedicion
+            ),
             telefono: data.estudiante.telefono,
             direccion: data.estudiante.direccion,
             email: data.estudiante.email,
@@ -221,7 +236,7 @@ export const getMatriculaCompleta = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-import { pool } from "../config/db.js";
+
 
 export const crearMatricula = async (req, res) => {
     try {
