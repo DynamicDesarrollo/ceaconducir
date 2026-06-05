@@ -328,38 +328,215 @@ const getCuentaEstudiante = async (req, res) => {
 };
 
 
-/* =========================
-   ACTUALIZAR
-========================= */
 const updateEstudiante = async (req, res) => {
-    const { id } = req.params;
+
+    const client = await pool.connect();
 
     try {
+
+        const { id } = req.params;
+
         const {
             nombre,
             documento,
+            tipo_documento,
+            fecha_expedicion,
             telefono,
             direccion,
-            email
+            email,
+            foto,
+            firma,
+            huella,
+            tipo_persona,
+            pep,
+            origen_recursos,
+
+            // MATRÍCULA
+            matricula_id,
+            categoria_id,
+            combo_id,
+            es_combo,
+            tipo_tramite,
+            solicitud_runt,
+            certificado_runt,
+            precio_lista,
+            descuento,
+            total_curso
+
         } = req.body;
 
-        const result = await pool.query(
-            `UPDATE estudiantes SET
+        const fechaExpedicion =
+            fecha_expedicion || null;
+
+        // =====================
+        // INICIAR TRANSACCIÓN
+        // =====================
+
+        await client.query("BEGIN");
+
+        // =====================
+        // ESTUDIANTE
+        // =====================
+
+        const result = await client.query(
+            `
+            UPDATE estudiantes
+            SET
                 nombre = $1,
                 documento = $2,
-                telefono = $3,
-                direccion = $4,
-                email = $5
-            WHERE id = $6
-            RETURNING *`,
-            [nombre, documento, telefono, direccion, email, id]
+                tipo_documento = $3,
+                fecha_expedicion = $4,
+                telefono = $5,
+                direccion = $6,
+                email = $7,
+                foto = $8,
+                firma = $9,
+                huella = $10,
+                tipo_persona = $11,
+                pep = $12,
+                origen_recursos = $13
+            WHERE id = $14
+            RETURNING *
+            `,
+            [
+                nombre,
+                documento,
+                tipo_documento,
+                fechaExpedicion,
+                telefono,
+                direccion,
+                email,
+                foto,
+                firma,
+                huella,
+                tipo_persona,
+                pep,
+                origen_recursos,
+                id
+            ]
         );
+
+        // =====================
+        // MATRÍCULA
+        // =====================
+        // =====================
+        // VALIDAR PAGOS
+        // =====================
+
+        // =====================
+// VALIDAR PAGOS
+// =====================
+
+const pagosResult = await client.query(
+`
+SELECT COALESCE(SUM(monto),0) AS total_pagado
+FROM pagos
+WHERE estudiante_id = $1
+`,
+[id]
+);
+
+const totalPagado =
+    Number(
+        pagosResult.rows[0].total_pagado
+    );
+
+if (
+    totalPagado > 0 &&
+    matricula_id
+) {
+
+    const matriculaActual =
+        await client.query(
+            `
+            SELECT
+                categoria_id,
+                combo_id,
+                precio_lista
+            FROM matriculas
+            WHERE id = $1
+            `,
+            [matricula_id]
+        );
+
+    const actual =
+        matriculaActual.rows[0];
+
+    if (
+        String(actual.categoria_id || "") !== String(categoria_id || "") ||
+        String(actual.combo_id || "") !== String(combo_id || "")
+    ) {
+
+        throw new Error(
+            `Este estudiante tiene pagos registrados por $${totalPagado.toLocaleString("es-CO")}. No es posible cambiar la categoría o combo.`
+        );
+
+    }
+}
+
+
+        if (matricula_id) {
+
+            await client.query(
+                `
+                UPDATE matriculas
+                SET
+                    categoria_id = $1,
+                    combo_id = $2,
+                    es_combo = $3,
+                    tipo_tramite = $4,
+                    solicitud_runt = $5,
+                    certificado_runt = $6,
+                    precio_lista = $7,
+                    descuento = $8,
+                    total_curso = $9
+                WHERE id = $10
+                `,
+                [
+                    categoria_id,
+                    combo_id,
+                    es_combo,
+                    tipo_tramite,
+                    solicitud_runt,
+                    certificado_runt,
+                    precio_lista,
+                    descuento,
+                    total_curso,
+                    matricula_id
+                ]
+            );
+
+        }
+
+        // =====================
+        // CONFIRMAR
+        // =====================
+
+        await client.query("COMMIT");
 
         res.json(result.rows[0]);
 
     } catch (error) {
-        console.error("ERROR ACTUALIZAR:", error);
-        res.status(500).json({ error: error.message });
+
+        // =====================
+        // DESHACER TODO
+        // =====================
+
+        await client.query("ROLLBACK");
+
+        console.error(
+            "ERROR ACTUALIZAR:",
+            error
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    } finally {
+
+        client.release();
+
     }
 };
 
@@ -477,17 +654,17 @@ const getEstudianteCompleto = async (req, res) => {
 
             ORDER BY m.fecha_matricula DESC
             LIMIT 1
-        `,[id]);
+        `, [id]);
 
-        if(result.rows.length === 0){
+        if (result.rows.length === 0) {
             return res.status(404).json({
-                msg:"Estudiante no encontrado"
+                msg: "Estudiante no encontrado"
             });
         }
 
         res.json(result.rows[0]);
 
-    } catch(error){
+    } catch (error) {
 
         console.error(
             "ERROR GET ESTUDIANTE COMPLETO:",
@@ -495,7 +672,7 @@ const getEstudianteCompleto = async (req, res) => {
         );
 
         res.status(500).json({
-            msg:error.message
+            msg: error.message
         });
     }
 };

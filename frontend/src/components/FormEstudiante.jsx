@@ -305,7 +305,41 @@ export default function FormEstudiante({
     try {
       setLoading(true);
       if (isEdit) {
-        await updateEstudiante(initialData.id, form);
+        console.log("FIRMA:", form.firma);
+        console.log("LONGITUD FIRMA:", form.firma?.length);
+        await updateEstudiante(
+          initialData.id,
+          {
+            ...form,
+
+            matricula_id: initialData.matricula_id,
+
+            categoria_id:
+              tipoCurso === "CATEGORIA"
+                ? categoriaId
+                : null,
+
+            combo_id:
+              tipoCurso === "COMBO"
+                ? comboId
+                : null,
+
+            es_combo:
+              tipoCurso === "COMBO",
+
+            tipo_tramite: tipoTramite,
+
+            solicitud_runt: solicitudRunt,
+
+            certificado_runt: certificadoRunt,
+
+            precio_lista: precioLista,
+
+            descuento: descuento,
+
+            total_curso: valorFinal,
+          }
+        );
         toast.success("Estudiante actualizado");
       } else {
         // Usar endpoint optimizado
@@ -951,6 +985,7 @@ export default function FormEstudiante({
                 "
               >
                 <FirmaPad
+                  firmaInicial={form.firma}
                   onSave={(firma) => {
                     setForm((prev) => ({
                       ...prev,

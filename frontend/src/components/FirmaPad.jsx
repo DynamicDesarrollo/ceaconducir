@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import SignaturePad from "signature_pad";
 
-export default function FirmaPad({ onSave }) {
+export default function FirmaPad({ onSave, firmaInicial }) {
   const canvasRef = useRef(null);
   const signaturePadRef = useRef(null);
 
@@ -34,6 +34,39 @@ export default function FirmaPad({ onSave }) {
       window.removeEventListener("resize", resizeCanvas);
     };
   }, []);
+
+  useEffect(() => {
+
+    if (!firmaInicial) return;
+
+    const timer = setTimeout(() => {
+
+      try {
+
+        if (signaturePadRef.current) {
+
+          signaturePadRef.current.clear();
+
+          signaturePadRef.current.fromDataURL(
+            firmaInicial
+          );
+
+        }
+
+      } catch (err) {
+
+        console.error(
+          "Error cargando firma:",
+          err
+        );
+
+      }
+
+    }, 200);
+
+    return () => clearTimeout(timer);
+
+  }, [firmaInicial]);
 
   const limpiar = () => {
     signaturePadRef.current?.clear();

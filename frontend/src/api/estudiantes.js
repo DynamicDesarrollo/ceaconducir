@@ -34,12 +34,7 @@ export const crearEstudiante = (data) => {
  */
 export const updateEstudiante = (id, data) => {
   return api.put(`/estudiantes/${id}`, {
-    nombre: data.nombre,
-    documento: data.documento,
-    telefono: data.telefono,
-    direccion: data.direccion,
-    email: data.email,
-    foto: data.foto,
+    ...data
   });
 };
 
