@@ -5,7 +5,8 @@ import {
   updateEstudiante,
   deleteEstudiante,
   getCuentaEstudiante,
-  crearEstudianteConMatricula
+  crearEstudianteConMatricula,
+  getEstudianteCompleto
 } from "../controllers/estudiantes.controller.js";
 import { verificarToken } from '../middlewares/auth.middleware.js';
 
@@ -18,6 +19,7 @@ router.post("/", verificarToken, crearEstudiante);
 // Crear estudiante + matrícula en una sola transacción
 router.post("/crear-con-matricula", verificarToken, crearEstudianteConMatricula);
 router.get("/", verificarToken, getEstudiantes);
+router.get("/:id/completo", verificarToken, getEstudianteCompleto);
 router.put("/:id", verificarToken, updateEstudiante);
 router.delete("/:id", verificarToken, deleteEstudiante);
 

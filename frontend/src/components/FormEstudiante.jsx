@@ -122,23 +122,65 @@ export default function FormEstudiante({
   // CARGAR DATOS EDICIÓN
   // =====================================
   useEffect(() => {
-    if (initialData) {
-      setForm({
-        nombre: initialData.nombre || "",
-        documento: initialData.documento || "",
-        tipo_documento: initialData.tipo_documento || "CC",
-        fecha_expedicion: initialData.fecha_expedicion || "",
-        telefono: initialData.telefono || "",
-        direccion: initialData.direccion || "",
-        email: initialData.email || "",
-        foto: initialData.foto || "",
-        firma: initialData.firma || "",
-        huella: initialData.huella || "",
-        tipo_persona: initialData.tipo_persona || "NATURAL",
-        pep: initialData.pep || "NO",
-        origen_recursos: initialData.origen_recursos || "SALARIO",
-      });
-    }
+
+    if (!initialData) return;
+
+    setForm({
+      nombre: initialData.nombre || "",
+      documento: initialData.documento || "",
+      tipo_documento: initialData.tipo_documento || "CC",
+      fecha_expedicion: initialData.fecha_expedicion || "",
+      telefono: initialData.telefono || "",
+      direccion: initialData.direccion || "",
+      email: initialData.email || "",
+
+      foto: initialData.foto || "",
+      firma: initialData.firma || "",
+      huella: initialData.huella || "",
+
+      tipo_persona: initialData.tipo_persona || "NATURAL",
+      pep: initialData.pep || "NO",
+      origen_recursos: initialData.origen_recursos || "SALARIO",
+    });
+
+    // =====================
+    // DATOS MATRICULA
+    // =====================
+
+    setTipoCurso(
+      initialData.es_combo
+        ? "COMBO"
+        : "CATEGORIA"
+    );
+
+    setCategoriaId(
+      String(initialData.categoria_id || "")
+    );
+
+    setComboId(
+      String(initialData.combo_id || "")
+    );
+
+    setTipoTramite(
+      initialData.tipo_tramite || ""
+    );
+
+    setSolicitudRunt(
+      initialData.solicitud_runt || ""
+    );
+
+    setCertificadoRunt(
+      initialData.certificado_runt || ""
+    );
+
+    setPrecioLista(
+      Number(initialData.precio_lista || 0)
+    );
+
+    setDescuento(
+      Number(initialData.descuento || 0)
+    );
+
   }, [initialData]);
 
   // =====================================
@@ -593,7 +635,7 @@ export default function FormEstudiante({
                             </option>
 
                             {categorias.map((cat) => (
-                              <option key={cat.id} value={cat.id}>
+                              <option key={cat.id} value={String(cat.id)}>
                                 {cat.nombre} - $
                                 {Number(cat.precio_total || 0).toLocaleString("es-CO")}
                               </option>

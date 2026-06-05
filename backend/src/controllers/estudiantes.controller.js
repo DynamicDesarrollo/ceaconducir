@@ -436,6 +436,69 @@ const deleteEstudiante = async (req, res) => {
         client.release();
     }
 };
+const getEstudianteCompleto = async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const result = await pool.query(`
+            SELECT
+                e.*,
+
+                m.id AS matricula_id,
+                m.categoria_id,
+                m.combo_id,
+                m.es_combo,
+
+                m.tipo_tramite,
+                m.solicitud_runt,
+                m.certificado_runt,
+                m.observaciones,
+
+                m.precio_lista,
+                m.descuento,
+                m.total_curso,
+
+                c.nombre AS categoria_nombre,
+                co.nombre AS combo_nombre
+
+            FROM estudiantes e
+
+            LEFT JOIN matriculas m
+                ON m.estudiante_id = e.id
+
+            LEFT JOIN categorias c
+                ON c.id = m.categoria_id
+
+            LEFT JOIN combos co
+                ON co.id = m.combo_id
+
+            WHERE e.id = $1
+
+            ORDER BY m.fecha_matricula DESC
+            LIMIT 1
+        `,[id]);
+
+        if(result.rows.length === 0){
+            return res.status(404).json({
+                msg:"Estudiante no encontrado"
+            });
+        }
+
+        res.json(result.rows[0]);
+
+    } catch(error){
+
+        console.error(
+            "ERROR GET ESTUDIANTE COMPLETO:",
+            error
+        );
+
+        res.status(500).json({
+            msg:error.message
+        });
+    }
+};
 export {
     crearEstudianteConMatricula,
     crearEstudiante,
@@ -443,4 +506,5 @@ export {
     getCuentaEstudiante,
     updateEstudiante,
     deleteEstudiante,
+    getEstudianteCompleto,
 };

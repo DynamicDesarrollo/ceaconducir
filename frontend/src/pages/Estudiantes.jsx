@@ -5,6 +5,7 @@ import { getEstudiantes, deleteEstudiante } from "../api/estudiantes";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import KPI from "../components/KPI";
+import api from "../api/axios";
 
 export default function Estudiantes() {
     const columns = ["Foto", "Nombre", "Documento", "Teléfono", "Direccion", "Email", "Estado"];
@@ -95,6 +96,29 @@ export default function Estudiantes() {
         }
     };
 
+    const editarEstudiante = async (row) => {
+        try {
+
+            const res = await api.get(
+                `/estudiantes/${row.id}/completo`
+            );
+
+            console.log("ESTUDIANTE COMPLETO:", res.data);
+
+            setEditData(res.data);
+
+            setShowModal(true);
+
+        } catch (error) {
+
+            console.error(error);
+
+            toast.error(
+                "Error cargando estudiante"
+            );
+        }
+    };
+
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
 
@@ -167,11 +191,11 @@ export default function Estudiantes() {
                 renderRow={(e) => (
                     <>
                         <td>
-                          {typeof e.foto === "string" && e.foto.startsWith("data:image") ? (
-                            <img src={e.foto} alt="Foto" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8 }} />
-                          ) : (
-                            "-"
-                          )}
+                            {typeof e.foto === "string" && e.foto.startsWith("data:image") ? (
+                                <img src={e.foto} alt="Foto" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8 }} />
+                            ) : (
+                                "-"
+                            )}
                         </td>
                         <td>{e.nombre}</td>
                         <td>{e.documento}</td>
@@ -196,10 +220,7 @@ export default function Estudiantes() {
                 renderActions={(row) => (
                     <div className="flex gap-2">
                         <button
-                            onClick={() => {
-                                setEditData(row);
-                                setShowModal(true);
-                            }}
+                            onClick={() => editarEstudiante(row)}
                             className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                             Editar
@@ -207,12 +228,12 @@ export default function Estudiantes() {
 
                         {/* Botón para ver ficha matrícula (redirige si hay matrícula asociada) */}
                         {row.matricula_id && (
-                                                    <a
-                                                        href={`/matriculas/${row.matricula_id}/ficha`}
-                                                        className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
-                                                    >
-                                                        Ficha
-                                                    </a>
+                            <a
+                                href={`/matriculas/${row.matricula_id}/ficha`}
+                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                                Ficha
+                            </a>
                         )}
 
                         <button
